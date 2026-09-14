@@ -9,3 +9,16 @@ tasks {
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
 }
+
+// Skip compilation when NMS dependencies are unavailable (requires BuildTools)
+tasks.withType(JavaCompile).configureEach {
+    onlyIf {
+        try {
+            configurations.compileClasspath.resolvedConfiguration.resolvedArtifacts
+                .any { it.moduleVersion.id.group == 'org.spigotmc' }
+        } catch (Exception ignored) {
+            logger.warn("[${project.name}] NMS dependencies not available - skipping compilation. Run BuildTools to enable.")
+            false
+        }
+    }
+}

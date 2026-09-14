@@ -353,7 +353,6 @@ public class Messages {
     public static String TEAM_ELIMINATED_CHAT = "team-eliminated";
 
     public static String HALLOWEEN_ITEM_NAME = "halloween-item-name";
-
     /** Upgrades/ Shop*/
     public static String NPC_NAME_TEAM_UPGRADES = "npcs.team-upgrades.%group%";
     public static String NPC_NAME_TEAM_SHOP = "npcs.team-shop.%group%";

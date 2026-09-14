@@ -133,10 +133,7 @@ public class v1_18_R2 extends VersionSupport {
         new Despawnable(IGolem.spawn(loc, bedWarsTeam, speed, health, despawn, pathFindingTicks), bedWarsTeam, despawn, Messages.SHOP_UTILITY_NPC_IRON_GOLEM_NAME,
                 PlayerKillEvent.PlayerKillCause.IRON_GOLEM_FINAL_KILL, PlayerKillEvent.PlayerKillCause.IRON_GOLEM);
     }
-    @Override
-    public float getAbsorption(Player player) {
-        return (float) player.getAbsorptionAmount();
-    }
+
     @Override
     public void playAction(Player p, String text) {
         CraftPlayer cPlayer = (CraftPlayer) p;
@@ -874,6 +871,11 @@ public class v1_18_R2 extends VersionSupport {
     public void callPlayerDeathEvent(Player player, List<org.bukkit.inventory.ItemStack> drops, int droppedExp, int newLevel, String deathMessage) {
         PlayerDeathEvent deathEvent = new PlayerDeathEvent(player, drops, droppedExp, newLevel, deathMessage);
         Bukkit.getPluginManager().callEvent(deathEvent);
+    }
+
+    @Override
+    public float getAbsorption(Player player) {
+        return (float) player.getAbsorptionAmount();
     }
 
     @Override

@@ -72,7 +72,7 @@ public class ConfigPath {
     public static final String GENERAL_CONFIGURATION_BUNGEE_OPTION_SERVER_ID = "bungeecord-settings.server-id";
     public static final String GENERAL_CONFIGURATION_BUNGEE_OPTION_BWP_TIME_OUT = "bungeecord-settings.bwp-time-out";
     public static final String GENERAL_CONFIGURATION_BUNGEE_OPTION_CLOUDNET_SUPPORT = "bungeecord-settings.cloudnet-support";
-    public static final String GENERAL_CONFIGURATION_BUNGEE_OPTION_LOBBY_SERVER= "bungeecord-settings.lobby-server";
+    public static final String GENERAL_CONFIGURATION_BUNGEE_OPTION_LOBBY_SERVER = "bungeecord-settings.lobby-server";
 
     public static final String GENERAL_CONFIGURATION_ALLOW_FIRE_EXTINGUISH = "allow-fire-extinguish";
     public static final String GENERAL_CONFIGURATION_ENABLE_HALLOWEEN = "enable-halloween-feature";
@@ -86,12 +86,11 @@ public class ConfigPath {
 
     public static final String GENERAL_CONFIGURATION_AUTO_GG_PREFIX = "auto-gg-feature.";
     public static final String GENERAL_CONFIGURATION_AUTO_GG_ENABLED = GENERAL_CONFIGURATION_AUTO_GG_PREFIX + "enable";
-    public static final String GENERAL_CONFIGURATION_AUTO_GG_TEXT= GENERAL_CONFIGURATION_AUTO_GG_PREFIX + "text";
+    public static final String GENERAL_CONFIGURATION_AUTO_GG_TEXT = GENERAL_CONFIGURATION_AUTO_GG_PREFIX + "text";
 
     public static final String GENERAL_CONFIGURATION_RESOURCE_CHEST_PREFIX = "click-in-chest-to-deposit-feature.";
     public static final String GENERAL_CONFIGURATION_RESOURCE_CHEST_ENABLED = GENERAL_CONFIGURATION_RESOURCE_CHEST_PREFIX + "enable";
     public static final String GENERAL_CONFIGURATION_RESOURCE_CHEST_BLOCKED = GENERAL_CONFIGURATION_RESOURCE_CHEST_PREFIX + "blocked-items";
-
 
 
     public static final String COMMAND_MAP_CONSOLE_DENIED = "cmd-map-console-denied";
@@ -155,7 +154,7 @@ public class ConfigPath {
     public static final String GENERAL_CONFIGURATION_REJOIN_TIME = "rejoin-time";
     public static final String GENERAL_CONFIGURATION_RE_SPAWN_INVULNERABILITY = "re-spawn-invulnerability";
     public static final String GENERAL_CONFIGURATION_IN_GAME_ANNOUNCEMENT = "in-game-announcement";
-    public static final String GENERAL_CONFIGURATION_IN_GAME_ANNOUNCEMENT_ENABLE = GENERAL_CONFIGURATION_IN_GAME_ANNOUNCEMENT +".enable";
+    public static final String GENERAL_CONFIGURATION_IN_GAME_ANNOUNCEMENT_ENABLE = GENERAL_CONFIGURATION_IN_GAME_ANNOUNCEMENT + ".enable";
 
     public static final String GENERAL_CONFIGURATION_IN_GAME_ANNOUNCEMENT_COOLDOW = GENERAL_CONFIGURATION_IN_GAME_ANNOUNCEMENT + ".cooldown";
 
@@ -177,7 +176,7 @@ public class ConfigPath {
     public static final String SB_CONFIG_SIDEBAR_LIST_FORMAT_PLAYING = "scoreboard-settings.player-list.format-playing-list";
     public static final String SB_CONFIG_SIDEBAR_LIST_FORMAT_RESTARTING = "scoreboard-settings.player-list.format-restarting-list";
     public static final String SB_CONFIG_SIDEBAR_PLAYER_NAME = "scoreboard-settings.player-name";
-    public static final String SB_CONFIG_SIDEBAR_NAME_FORMATTING_ENABLED= "scoreboard-settings.tab-name-formatting-enable";
+    public static final String SB_CONFIG_SIDEBAR_NAME_FORMATTING_ENABLED = "scoreboard-settings.tab-name-formatting-enable";
     public static final String GENERAL_CONFIGURATION_DISABLED_LANGUAGES = "disabled-languages";
 
     public static final String GENERAL_CONFIGURATION_ARENA_SELECTOR_PATH = "arena-gui";
@@ -199,8 +198,8 @@ public class ConfigPath {
     public static final String GENERAL_DISABLE_SHOUT_SOLO = "disable-shout-solo";
 
     private static final String GENERAL_CHAT = "chat-settings.";
-    public static final String GENERAL_CHAT_FORMATTING = GENERAL_CHAT+"format";
-    public static final String GENERAL_CHAT_GLOBAL = GENERAL_CHAT+"global";
+    public static final String GENERAL_CHAT_FORMATTING = GENERAL_CHAT + "format";
+    public static final String GENERAL_CHAT_GLOBAL = GENERAL_CHAT + "global";
 
     public static final String ARENA_DISPLAY_NAME = "display-name";
     public static final String ARENA_CONFIGURATION_MAX_BUILD_Y = "max-build-y";
@@ -259,12 +258,12 @@ public class ConfigPath {
     public static final String GENERAL_TNT_JUMP_VELOCITY_MULTIPLIER = GENERAL_TNT_JUMP_PATH + ".velocity-multiplier";
     public static final String GENERAL_TNT_JUMP_Y_MULTIPLIER = GENERAL_TNT_JUMP_PATH + ".y-multiplier";
     public static final String GENERAL_TNT_BLAST_PROTECTION = "blast-protection";
-    public static final String GENERAL_TNT_PROTECTION_END_STONE_BLAST = GENERAL_TNT_BLAST_PROTECTION+".end-stone";
-    public static final String GENERAL_TNT_PROTECTION_GLASS_BLAST = GENERAL_TNT_BLAST_PROTECTION+".glass";
+    public static final String GENERAL_TNT_PROTECTION_END_STONE_BLAST = GENERAL_TNT_BLAST_PROTECTION + ".end-stone";
+    public static final String GENERAL_TNT_PROTECTION_GLASS_BLAST = GENERAL_TNT_BLAST_PROTECTION + ".glass";
 
     public static final String GENERAL_TNT_PRIME = "tnt-prime-settings";
-    public static final String GENERAL_TNT_AUTO_IGNITE = GENERAL_TNT_PRIME+".auto-ignite";
-    public static final String GENERAL_TNT_FUSE_TICKS = GENERAL_TNT_PRIME+".fuse-ticks";
+    public static final String GENERAL_TNT_AUTO_IGNITE = GENERAL_TNT_PRIME + ".auto-ignite";
+    public static final String GENERAL_TNT_FUSE_TICKS = GENERAL_TNT_PRIME + ".fuse-ticks";
 
     private static final String GENERAL_FIREBALL_PATH = "fireball";
     public static final String GENERAL_FIREBALL_EXPLOSION_SIZE = GENERAL_FIREBALL_PATH + ".explosion-size";
@@ -283,14 +282,14 @@ public class ConfigPath {
     public static final String GENERAL_FIREBALL_EXPLOSION_PROOF_BLOCKS = GENERAL_FIREBALL_PATH + ".explosion-proof-blocks";
 
     public static final String GENERAL_EGGBRIDGE = "eggbridge-settings";
-    public static final String GENERAL_EGGBRIDGE_MIN_DISTANCE_FROM_PLAYER = GENERAL_EGGBRIDGE+".distance-from-player-to-start-building";
-    public static final String GENERAL_EGGBRIDGE_MAX_LENGTH = GENERAL_EGGBRIDGE+".max-length";
-    public static final String GENERAL_EGGBRIDGE_MAX_HEIGHT = GENERAL_EGGBRIDGE+".max-height";
-    public static final String GENERAL_EGGBRIDGE_USED_CLOSE_TO_BUILD_LIMIT = GENERAL_EGGBRIDGE+".when-used-close-to-build-limit";
-    public static final String GENERAL_EGGBRIDGE_MAX_BUILD_LIMIT_WARNING_DISTANCE = GENERAL_EGGBRIDGE_USED_CLOSE_TO_BUILD_LIMIT +".distance-to-max-build-limit";
-    public static final String GENERAL_EGGBRIDGE_MIN_BUILD_LIMIT_WARNING_DISTANCE = GENERAL_EGGBRIDGE_USED_CLOSE_TO_BUILD_LIMIT +".distance-to-min-build-limit";
-    public static final String GENERAL_EGGBRIDGE_BUILD_LIMIT_WARN_PLAYER = GENERAL_EGGBRIDGE_USED_CLOSE_TO_BUILD_LIMIT +".send-warn-message";
-    public static final String GENERAL_EGGBRIDGE_BUILD_LIMIT_CANCEL_USAGE = GENERAL_EGGBRIDGE_USED_CLOSE_TO_BUILD_LIMIT +".cancel-usage";
+    public static final String GENERAL_EGGBRIDGE_MIN_DISTANCE_FROM_PLAYER = GENERAL_EGGBRIDGE + ".distance-from-player-to-start-building";
+    public static final String GENERAL_EGGBRIDGE_MAX_LENGTH = GENERAL_EGGBRIDGE + ".max-length";
+    public static final String GENERAL_EGGBRIDGE_MAX_HEIGHT = GENERAL_EGGBRIDGE + ".max-height";
+    public static final String GENERAL_EGGBRIDGE_USED_CLOSE_TO_BUILD_LIMIT = GENERAL_EGGBRIDGE + ".when-used-close-to-build-limit";
+    public static final String GENERAL_EGGBRIDGE_MAX_BUILD_LIMIT_WARNING_DISTANCE = GENERAL_EGGBRIDGE_USED_CLOSE_TO_BUILD_LIMIT + ".distance-to-max-build-limit";
+    public static final String GENERAL_EGGBRIDGE_MIN_BUILD_LIMIT_WARNING_DISTANCE = GENERAL_EGGBRIDGE_USED_CLOSE_TO_BUILD_LIMIT + ".distance-to-min-build-limit";
+    public static final String GENERAL_EGGBRIDGE_BUILD_LIMIT_WARN_PLAYER = GENERAL_EGGBRIDGE_USED_CLOSE_TO_BUILD_LIMIT + ".send-warn-message";
+    public static final String GENERAL_EGGBRIDGE_BUILD_LIMIT_CANCEL_USAGE = GENERAL_EGGBRIDGE_USED_CLOSE_TO_BUILD_LIMIT + ".cancel-usage";
 
     public static final String GENERAL_CONFIGURATION_DATABASE_PATH = "database";
     public static final String GENERAL_CONFIGURATION_DATABASE_TYPE = GENERAL_CONFIGURATION_DATABASE_PATH + ".type";
@@ -312,9 +311,9 @@ public class ConfigPath {
 
     public static final String GENERAL_CONFIGURATION_PERFORMANCE_PAPER_FEATURES = GENERAL_CONFIGURATION_PERFORMANCE_PATH + ".paper-features";
 
-    private static final String GENERAL_CONFIGURATION_HEAL_POOL = GENERAL_CONFIGURATION_PERFORMANCE_PATH+".heal-pool";
-    public static final String GENERAL_CONFIGURATION_HEAL_POOL_ENABLE = GENERAL_CONFIGURATION_HEAL_POOL+".enable";
-    public static final String GENERAL_CONFIGURATION_HEAL_POOL_SEEN_TEAM_ONLY = GENERAL_CONFIGURATION_HEAL_POOL+".seen-by-team-only";
+    private static final String GENERAL_CONFIGURATION_HEAL_POOL = GENERAL_CONFIGURATION_PERFORMANCE_PATH + ".heal-pool";
+    public static final String GENERAL_CONFIGURATION_HEAL_POOL_ENABLE = GENERAL_CONFIGURATION_HEAL_POOL + ".enable";
+    public static final String GENERAL_CONFIGURATION_HEAL_POOL_SEEN_TEAM_ONLY = GENERAL_CONFIGURATION_HEAL_POOL + ".seen-by-team-only";
     public static final String SHOP_SETTINGS_PATH = "shop-settings";
     public static final String SHOP_SPECIALS_PATH = "shop-specials";
     public static final String SHOP_QUICK_DEFAULTS_PATH = "quick-buy-defaults";
@@ -401,4 +400,5 @@ public class ConfigPath {
 
     public static final String LOBBY_VOID_TELEPORT_ENABLED = "lobby-settings.void-tp";
     public static final String LOBBY_VOID_TELEPORT_HEIGHT = "lobby-settings.void-height";
+
 }

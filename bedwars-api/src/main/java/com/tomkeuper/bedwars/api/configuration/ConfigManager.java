@@ -22,6 +22,7 @@ package com.tomkeuper.bedwars.api.configuration;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
@@ -150,7 +151,16 @@ public class ConfigManager {
         String d = yml.getString(path);
         if (d == null) return null;
         String[] data = d.replace("[", "").replace("]", "").split(",");
-        return new Location(Bukkit.getWorld(data[5]), Double.parseDouble(data[0]), Double.parseDouble(data[1]), Double.parseDouble(data[2]), Float.parseFloat(data[3]), Float.parseFloat(data[4]));
+        if (!isLocationData(data, 6) || data[5].trim().isEmpty()) {
+            Bukkit.getLogger().severe("ConfigManager: invalid location for '" + path + "' in " + name + ".yml -> " + d);
+            return null;
+        }
+        World world = Bukkit.getWorld(data[5].trim());
+        if (world == null) {
+            Bukkit.getLogger().severe("ConfigManager: world '" + data[5] + "' not found for location '" + path + "' in " + name + ".yml");
+            return null;
+        }
+        return new Location(world, Double.parseDouble(data[0]), Double.parseDouble(data[1]), Double.parseDouble(data[2]), Float.parseFloat(data[3]), Float.parseFloat(data[4]));
     }
 
     /**
@@ -161,6 +171,10 @@ public class ConfigManager {
         String d = yml.getString(path);
         if (d == null) return null;
         String[] data = d.replace("[", "").replace("]", "").split(",");
+        if (!isLocationData(data, 5)) {
+            Bukkit.getLogger().severe("ConfigManager: invalid arena location for '" + path + "' in " + name + ".yml -> " + d);
+            return null;
+        }
         return new Location(Bukkit.getWorld(name), Double.parseDouble(data[0]), Double.parseDouble(data[1]), Double.parseDouble(data[2]), Float.parseFloat(data[3]), Float.parseFloat(data[4]));
     }
 
@@ -168,9 +182,32 @@ public class ConfigManager {
      * Convert string to arena location syntax
      */
     public Location convertStringToArenaLocation(String string) {
+        if (string == null) return null;
         String[] data = string.split(",");
+        if (!isLocationData(data, 5)) {
+            Bukkit.getLogger().severe("ConfigManager: invalid arena location string -> " + string);
+            return null;
+        }
         return new Location(Bukkit.getWorld(name), Double.parseDouble(data[0]), Double.parseDouble(data[1]), Double.parseDouble(data[2]), Float.parseFloat(data[3]), Float.parseFloat(data[4]));
+    }
 
+    /**
+     * Validate that the computed fields of a comma-separated location string are numeric.
+     * Arena locations are stored as x,y,z,yaw,pitch (plus an optional trailing world name
+     * for {@link #saveConfigLoc(String, Location)} locations).
+     *
+     * @return true if the string holds at least {@code requiredFields} numeric fields.
+     */
+    private boolean isLocationData(String[] data, int requiredFields) {
+        if (data == null || data.length < requiredFields) return false;
+        for (int i = 0; i < requiredFields - 1; i++) {
+            try {
+                Double.parseDouble(data[i].trim());
+            } catch (NumberFormatException ex) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

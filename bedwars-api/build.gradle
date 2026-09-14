@@ -8,7 +8,9 @@ dependencies {
     compileOnly('org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT') {
         exclude group: 'commons-lang', module: 'commons-lang'
     }
-    compileOnly 'com.iridium:IridiumColorAPI:1.0.9'
+    compileOnly('com.github.Iridium-Development:IridiumColorAPI:1520cf7f9d') { // IridiumColorAPI 1.0.9 via JitPack
+        exclude group: 'org.spigotmc', module: 'spigot'
+    }
     compileOnly 'org.apache.commons:commons-lang3:3.14.0' // Used by IridiumColorAPI
     compileOnly 'com.github.NEZNAMY:TAB-API:5.0.7'
 }
@@ -22,7 +24,8 @@ repositories {
     mavenCentral()
     mavenLocal()
     maven { url = uri('https://repo.papermc.io/repository/maven-public/') } // bungeecord-chat (dep of spigot-api)
-    maven { url = uri('https://nexus.iridiumdevelopment.net/repository/maven-releases/') } // IridiumColorAPI
+    // IridiumColorAPI - nexus is dead, using JitPack fallback
+    maven { url = uri('https://jitpack.io') }
     maven { url = uri('https://jitpack.io') } // TAB
     maven { url = uri('https://repo.codemc.io/repository/nms/') } // Spigot
 }

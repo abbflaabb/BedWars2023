@@ -10,8 +10,8 @@ dependencies {
     compileOnly 'commons-io:commons-io:2.11.0'
 }
 
-// Target Java 21 bytecode for this module
-tasks.named('compileJava', JavaCompile) {
+// Target Java 21 bytecode for this module (file-loader:4.0.0 requires Java 21+)
+tasks.withType(JavaCompile).configureEach {
     options.release = 21
 }
 
@@ -21,4 +21,5 @@ repositories {
     maven { url = uri('https://hub.spigotmc.org/nexus/content/repositories/snapshots/') } // Spigot
     maven { url = uri('https://repo.papermc.io/repository/maven-public/') } // bungeecord-chat (dep of spigot-api)
     maven { url = uri('https://repo.infernalsuite.com/repository/maven-releases/') } // ASP:api
+    maven { url = uri('https://repo.titanvale.net/releases/') } // flow-nbt
 }

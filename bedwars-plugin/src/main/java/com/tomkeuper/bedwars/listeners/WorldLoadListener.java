@@ -20,6 +20,7 @@
 
 package com.tomkeuper.bedwars.listeners;
 
+import com.tomkeuper.bedwars.BedWars;
 import com.tomkeuper.bedwars.api.arena.IArena;
 import com.tomkeuper.bedwars.arena.Arena;
 import org.bukkit.event.EventHandler;
@@ -34,7 +35,14 @@ public class WorldLoadListener implements Listener {
     public void onLoad(WorldLoadEvent e) {
         for (IArena a : new LinkedList<>(Arena.getEnableQueue())) {
             if (a.getWorldName().equalsIgnoreCase(e.getWorld().getName())) {
-                a.init(e.getWorld());
+                try {
+                    a.init(e.getWorld());
+                } catch (Throwable t) {
+                    BedWars.plugin.getLogger().severe("Failed to initialize arena " + a.getWorldName() + ".");
+                    BedWars.plugin.getLogger().severe("Skipping it so the remaining arenas can still load.");
+                    t.printStackTrace();
+                    Arena.removeFromEnableQueue(a);
+                }
                 return;
             }
         }

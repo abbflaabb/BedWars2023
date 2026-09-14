@@ -361,7 +361,12 @@ public class Arena implements IArena {
                 BedWars.plugin.getLogger().severe("A team with name: " + team + " was already loaded for arena: " + getArenaName());
                 continue;
             }
-            BedWarsTeam bwt = new BedWarsTeam(team, TeamColor.valueOf(yml.getString("Team." + team + ".Color").toUpperCase()), cm.getArenaLoc("Team." + team + ".Spawn"),
+            Location teamSpawn = cm.getArenaLoc("Team." + team + ".Spawn");
+            if (teamSpawn == null) {
+                plugin.getLogger().severe("Skipping team '" + team + "' for arena '" + getArenaName() + "': invalid Spawn location in config.");
+                continue;
+            }
+            BedWarsTeam bwt = new BedWarsTeam(team, TeamColor.valueOf(yml.getString("Team." + team + ".Color").toUpperCase()), teamSpawn,
                     cm.getArenaLoc("Team." + team + ".Bed"), cm.getArenaLoc("Team." + team + ".Shop"), cm.getArenaLoc("Team." + team + ".Upgrade"), this);
             teams.add(bwt);
             bwt.spawnGenerators();

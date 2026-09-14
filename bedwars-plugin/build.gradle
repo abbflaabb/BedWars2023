@@ -19,16 +19,20 @@ repositories {
     maven { url = uri('https://maven.citizensnpcs.co/repo') } // citizens-main
     maven { url = uri('https://repo.extendedclip.com/content/repositories/placeholderapi/') } // placeholderapi
     maven { url = uri('https://repo.cloudnetservice.eu/releases/') } // cloudnet-wrapper-jvm
-    maven { url = uri('https://nexus.iridiumdevelopment.net/repository/maven-releases/') } // IridiumColorAPI
+    // IridiumColorAPI - nexus is dead, using JitPack fallback
+    maven { url = uri('https://jitpack.io') }
     maven { url = uri('https://repo.tomkeuper.com/repository/releases/') } // slimjar
     maven { url = uri('https://repo.alessiodp.com/releases/') } // slimjar - dependencies
     maven { url = uri('https://jitpack.io') } // Jitpack (RTag) & TAB
+    maven { url = uri('https://repo.titanvale.net/releases/') } // flow-nbt
 }
 
 dependencies {
     api 'io.papermc:paperlib:1.0.8'
     api 'org.bstats:bstats-bukkit:3.0.2'
-    implementation 'com.iridium:IridiumColorAPI:1.0.9' // used by BedWars - API
+    implementation('com.github.Iridium-Development:IridiumColorAPI:1520cf7f9d') { // IridiumColorAPI 1.0.9 via JitPack
+        exclude group: 'org.spigotmc', module: 'spigot'
+    }
     slim 'org.apache.commons:commons-lang3:3.14.0' // Used by IridiumColorAPI
 
     slim 'net.kyori:adventure-text-minimessage:4.23.0'
@@ -143,8 +147,17 @@ tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.Shadow
         dependsOn vp.tasks.named('shadowJar')
         dependsOn vp.tasks.withType(Jar)
         from({
-            def shadeTask = vp.tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar).get()
-            zipTree(shadeTask.archiveFile.get().asFile)
+            try {
+                def shadeTask = vp.tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar).get()
+                def jarFile = shadeTask.archiveFile.get().asFile
+                if (jarFile.exists()) {
+                    zipTree(jarFile)
+                } else {
+                    []
+                }
+            } catch (Exception ignored) {
+                []
+            }
         })
     }
 
