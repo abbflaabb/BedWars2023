@@ -155,6 +155,7 @@ public class BedWars extends JavaPlugin {
     public static BedWars plugin;
     private BukkitAudiences adventure;
     public static VersionSupport nms;
+    public static ArenaListener arenaListener;
 
     private static Party partyManager = new NoParty();
     private static IChat chat = new NoChat();
@@ -383,7 +384,7 @@ public class BedWars extends JavaPlugin {
 
         // Register events
         registerEvents(new EnderPearlLanded(), new QuitAndTeleportListener(), new BreakPlace(), new DamageDeathMove(), new Inventory(), new Interact(), new RefreshGUI(), new HungerWeatherSpawn(), new CmdProcess(),
-                new FireballListener(), new EggBridge(), new SpectatorListeners(), new BaseListener(), new TargetListener(), new LangListener(), new Warnings(this), new ChatAFK(), new GameEndListener(),new RecentlyPlayedListener(), new ArenaListener(this,invisConfig));
+                new FireballListener(), new EggBridge(), new SpectatorListeners(), new BaseListener(), new TargetListener(), new LangListener(), new Warnings(this), new ChatAFK(), new GameEndListener(),new RecentlyPlayedListener(), arenaListener = new ArenaListener(this,invisConfig));
         if (config.getBoolean(ConfigPath.GENERAL_CONFIGURATION_HEAL_POOL_ENABLE)) {
             registerEvents(new HealPoolListener());
         }
@@ -764,6 +765,10 @@ public class BedWars extends JavaPlugin {
     public void onDisable() {
         shuttingDown = true;
         addonManager.unloadAddons();
+        
+        // Cancel global tasks before disabling arenas
+        com.tomkeuper.bedwars.arena.feature.SpoilPlayerTNTFeature.disable();
+        
         if (!serverSoftwareSupport) return;
         if (getServerType() == ServerType.BUNGEE) {
             redisConnection.close();

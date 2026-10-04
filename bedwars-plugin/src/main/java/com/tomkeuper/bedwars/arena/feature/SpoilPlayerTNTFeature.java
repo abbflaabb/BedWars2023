@@ -43,16 +43,24 @@ import java.util.LinkedList;
 public class SpoilPlayerTNTFeature {
 
     private static SpoilPlayerTNTFeature instance;
+    private static int particleTaskId = -1;
     private final LinkedList<Player> playersWithTnt = new LinkedList<>();
 
     private SpoilPlayerTNTFeature() {
         Bukkit.getPluginManager().registerEvents(new TNTListener(), BedWars.plugin);
-        Bukkit.getScheduler().runTaskTimer(BedWars.plugin, new ParticleTask(), 20, 1L);
+        particleTaskId = Bukkit.getScheduler().runTaskTimer(BedWars.plugin, new ParticleTask(), 20, 1L).getTaskId();
     }
 
     public static void init() {
         if (BedWars.config.getBoolean(ConfigPath.GENERAL_CONFIGURATION_PERFORMANCE_SPOIL_TNT_PLAYERS))
             if (instance == null) instance = new SpoilPlayerTNTFeature();
+    }
+
+    public static void disable() {
+        if (particleTaskId > 0) {
+            Bukkit.getScheduler().cancelTask(particleTaskId);
+            particleTaskId = -1;
+        }
     }
 
     private static class ParticleTask implements Runnable {

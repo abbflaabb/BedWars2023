@@ -16,14 +16,32 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ArenaListener implements Listener {
     private final Plugin plugin;
     private final InvisConfig invisConfig;
+    private final AtomicInteger woodSwordTaskId = new AtomicInteger(-1);
+    private final AtomicInteger respawnInvisTaskId = new AtomicInteger(-1);
 
     public ArenaListener(Plugin plugin, InvisConfig invisConfig) {
         this.plugin = plugin;
         this.invisConfig = invisConfig;
+    }
+
+    /**
+     * Cancel all running tasks
+     */
+    public void cancelTasks() {
+        int woodTask = woodSwordTaskId.getAndSet(-1);
+        int respawnTask = respawnInvisTaskId.getAndSet(-1);
+        
+        if (woodTask > 0) {
+            Bukkit.getScheduler().cancelTask(woodTask);
+        }
+        if (respawnTask > 0) {
+            Bukkit.getScheduler().cancelTask(respawnTask);
+        }
     }
     @EventHandler
     public void onArenaStart(GameStateChangeEvent event) {
@@ -34,40 +52,57 @@ public class ArenaListener implements Listener {
                 // Remove wooden swords from players' inventories if the config option is enabled, to prevent them from being used as a weapon. This is done because wooden swords are often used as a cheap weapon in BedWars, and they can be easily obtained by players. By removing them, it encourages players to use other weapons and adds more variety to the gameplay.
                 if (event.getNewState() == GameState.playing) {
                     if (this.invisConfig.isWoodSwordDisappearanceEnabled()) {
-                        Bukkit.getServer().getScheduler().runTaskTimer(this.plugin, () -> {
-                            list.stream()
-                                    .filter(arena::isPlayer)
-                                    .forEach(p -> {
-                                        if (p.getInventory().contains(Material.WOOD_SWORD) &&
-                                                (p.getInventory().contains(Material.STONE_SWORD) ||
-                                                        p.getInventory().contains(Material.GOLD_SWORD) ||
-                                                        p.getInventory().contains(Material.IRON_SWORD) ||
-                                                        p.getInventory().contains(Material.DIAMOND_SWORD))) {
-                                            p.getInventory().remove(Material.WOOD_SWORD);
-                                        }
-                                    });
-                        }, 20L, 10L);
+                        // Cancel any existing task first
+                        cancelTasks();
+                        
+                        // Create new task with fresh player list
+                        int taskId = Bukkit.getServer().getScheduler().runTaskTimer(this.plugin, () -> {
+                            List<Player> currentPlayers = arena.getPlayers();
+                            if (currentPlayers != null) {
+                                currentPlayers.stream()
+                                        .filter(arena::isPlayer)
+                                        .forEach(p -> {
+                                            if (p.getInventory().contains(Material.WOODEN_SWORD) &&
+                                                    (p.getInventory().contains(Material.STONE_SWORD) ||
+                                                            p.getInventory().contains(Material.GOLDEN_SWORD) ||
+                                                            p.getInventory().contains(Material.IRON_SWORD) ||
+                                                            p.getInventory().contains(Material.DIAMOND_SWORD))) {
+                                                p.getInventory().remove(Material.WOODEN_SWORD);
+                                            }
+                                        });
+                            }
+                        }, 20L, 10L).getTaskId();
+                        
+                        woodSwordTaskId.set(taskId);
                     }
                 }
                 // Apply invisibility effect to players who are currently in the respawn session or spectator mode, if the config option is enabled. This is done to prevent other players from seeing them and to allow them to move around freely without being targeted by enemies. The invisibility effect is applied every 10 ticks (0.5 seconds) to ensure that it remains active as long as the player is in the respawn session or spectator mode.
                 if (this.invisConfig.isRespawnSessionInvisibilityEnabled()) {
-                    Bukkit.getServer().getScheduler().runTaskTimer(this.plugin, () -> {
-                        list.stream()
-                                .filter(arena::isPlayer)
-                                .forEach(p -> {
-                                    if (arena.isReSpawning(p)) {
-                                        p.addPotionEffect(new PotionEffect(
-                                                PotionEffectType.INVISIBILITY,
-                                                Integer.MAX_VALUE,
-                                                1,
-                                                false,
-                                                false
-                                        ));
-                                    } else {
-                                        p.removePotionEffect(PotionEffectType.INVISIBILITY);
-                                    }
-                                });
-                    }, 20L, 10L);
+                    // Cancel any existing task first
+                    cancelTasks();
+                    
+                    int taskId = Bukkit.getServer().getScheduler().runTaskTimer(this.plugin, () -> {
+                        List<Player> currentPlayers = arena.getPlayers();
+                        if (currentPlayers != null) {
+                            currentPlayers.stream()
+                                    .filter(arena::isPlayer)
+                                    .forEach(p -> {
+                                        if (arena.isReSpawning(p)) {
+                                            p.addPotionEffect(new PotionEffect(
+                                                    PotionEffectType.INVISIBILITY,
+                                                    Integer.MAX_VALUE,
+                                                    1,
+                                                    false,
+                                                    false
+                                            ));
+                                        } else {
+                                            p.removePotionEffect(PotionEffectType.INVISIBILITY);
+                                        }
+                                    });
+                        }
+                    }, 20L, 10L).getTaskId();
+                    
+                    respawnInvisTaskId.set(taskId);
                 }
                 // Apply invisibility effect to players who are currently in the spectator mode, if the config option is enabled. This is done to prevent other players from seeing them and to allow them to move around freely without being targeted by enemies. The invisibility effect is applied every 10 ticks (0.5 seconds) to ensure that it remains active as long as the player is in the spectator mode.
                 if (event.getNewState() == GameState.restarting) {

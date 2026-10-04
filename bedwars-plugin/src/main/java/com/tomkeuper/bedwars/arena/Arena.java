@@ -111,7 +111,7 @@ import com.tomkeuper.bedwars.api.shop.IShopIndex;
 import com.tomkeuper.bedwars.api.upgrades.UpgradesIndex;
 import com.tomkeuper.bedwars.shop.ShopManager;
 
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings("ALL")
 public class Arena implements IArena {
 
     private IShopIndex linkedShop;
@@ -1612,6 +1612,11 @@ public class Arena implements IArena {
             startTime = Instant.now();
         }
         this.status = status;
+        // Cancel ArenaListener repeating tasks (wood sword removal, respawn invisibility)
+        // before firing the state change event, so newly created tasks in the event handler are not cancelled.
+        if (BedWars.arenaListener != null) {
+            BedWars.arenaListener.cancelTasks();
+        }
         Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, status, status));
         refreshSigns();
         if (status == GameState.playing) {
