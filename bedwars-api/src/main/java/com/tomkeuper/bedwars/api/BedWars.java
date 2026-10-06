@@ -21,6 +21,7 @@
 package com.tomkeuper.bedwars.api;
 
 import com.tomkeuper.bedwars.api.addon.IAddonManager;
+import com.tomkeuper.bedwars.api.achievements.IAchievementManager;
 import com.tomkeuper.bedwars.api.arena.IArena;
 import com.tomkeuper.bedwars.api.arena.shop.IContentTier;
 import com.tomkeuper.bedwars.api.chat.IChat;
@@ -73,6 +74,11 @@ public interface BedWars {
      */
     @Deprecated
     IStatsManager getStatsManager();
+
+    /**
+     * Get the achievement manager.
+     */
+    IAchievementManager getAchievementManager();
 
     /**
      * Get addon util

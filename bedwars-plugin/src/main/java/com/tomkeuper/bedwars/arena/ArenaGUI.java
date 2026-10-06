@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+@SuppressWarnings("ALL")
 public class ArenaGUI {
 
     private static final YamlConfiguration yml = BedWars.config.getYml();
@@ -53,7 +54,7 @@ public class ArenaGUI {
     private static final HashMap<UUID, Long> antiCalledTwice = new HashMap<>();
 
     // Label shown in the lore for recently played arenas (supports color codes)
-    private static final String RECENTLY_PLAYED_LABEL = ChatColor.GRAY + "" + ChatColor.ITALIC + "(لعبت هنا مؤخراً)";
+    private static final String RECENTLY_PLAYED_LABEL = ChatColor.GRAY + "" + ChatColor.ITALIC + "(RecentlyPlayed)";
 
     public static void refreshInv(Player player, IArena arena, int players) {
         if (player == null || player.getOpenInventory() == null || !(player.getOpenInventory().getTopInventory().getHolder() instanceof ArenaSelectorHolder)) {

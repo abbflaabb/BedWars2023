@@ -21,6 +21,7 @@
 package com.tomkeuper.bedwars;
 
 import com.tomkeuper.bedwars.api.addon.IAddonManager;
+import com.tomkeuper.bedwars.api.achievements.IAchievementManager;
 import com.tomkeuper.bedwars.api.arena.IArena;
 import com.tomkeuper.bedwars.api.arena.shop.IContentTier;
 import com.tomkeuper.bedwars.api.chat.IChat;
@@ -335,6 +336,12 @@ public class API implements com.tomkeuper.bedwars.api.BedWars {
     @Override
     public IStatsManager getStatsManager() {
         return BedWars.getStatsManager();
+    }
+
+    @SuppressWarnings("unused")
+    @Override
+    public IAchievementManager getAchievementManager() {
+        return BedWars.getAchievementManager();
     }
 
     @SuppressWarnings("unused")

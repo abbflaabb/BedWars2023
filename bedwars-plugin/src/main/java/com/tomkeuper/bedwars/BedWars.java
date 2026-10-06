@@ -66,6 +66,9 @@ import com.tomkeuper.bedwars.configuration.*;
 import com.tomkeuper.bedwars.database.H2;
 import com.tomkeuper.bedwars.database.MySQL;
 import com.tomkeuper.bedwars.database.SQLite;
+import com.tomkeuper.bedwars.achievements.AchievementManager;
+import com.tomkeuper.bedwars.achievements.config.AchievementConfig;
+import com.tomkeuper.bedwars.api.achievements.IAchievementManager;
 import com.tomkeuper.bedwars.halloween.HalloweenSpecial;
 import com.tomkeuper.bedwars.hologram.HologramManager;
 import com.tomkeuper.bedwars.handlers.items.PreGameItem;
@@ -152,6 +155,7 @@ public class BedWars extends JavaPlugin {
     public static PlayerQuickBuyCache playerQuickBuyCache;
     public static ShopCache shopCache;
     public static StatsManager statsManager;
+    public static AchievementManager achievementManager;
     public static BedWars plugin;
     private BukkitAudiences adventure;
     public static VersionSupport nms;
@@ -300,10 +304,17 @@ public class BedWars extends JavaPlugin {
         hologramUpdateDistance = config.getInt(ConfigPath.GENERAL_CONFIGURATION_HOLOGRAM_UPDATE_DISTANCE);
 
         generators = new GeneratorsConfig(this, "generators", this.getDataFolder().getPath());
+        // Initialize Achievement Manager
+        achievementManager = new AchievementManager();
+        new AchievementConfig(this, "achievements", this.getDataFolder().getPath());
         // Initialize signs config after the main config
         if (getServerType() != ServerType.BUNGEE) {
             signs = new SignsConfig(this, "signs", this.getDataFolder().getPath());
         }
+
+        // Initialize Achievement Manager
+        achievementManager = new AchievementManager();
+        new AchievementConfig(this, "achievements", this.getDataFolder().getPath());
     }
 
     @Override
@@ -422,6 +433,7 @@ public class BedWars extends JavaPlugin {
         registerEvents(new ChunkLoad());
 
         registerEvents(new InvisibilityPotionListener());
+        registerEvents(new com.tomkeuper.bedwars.achievements.listeners.AchievementListener());
 
         statsManager = new StatsManager();
 
@@ -936,6 +948,10 @@ public class BedWars extends JavaPlugin {
 
     public static StatsManager getStatsManager() {
         return statsManager;
+    }
+
+    public static AchievementManager getAchievementManager() {
+        return achievementManager;
     }
 
     public static UpgradesManager getUpgradeManager() {

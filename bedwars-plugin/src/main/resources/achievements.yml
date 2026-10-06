@@ -1,0 +1,277 @@
+# BedWars2023 Achievement Configuration
+# This file contains all achievement definitions and rewards
+
+# Achievement Categories
+categories:
+  GENERAL:
+    display_name: "&fGeneral"
+    color: "GRAY"
+    icon: "PAPER"
+    description: "General achievements"
+  COMBAT:
+    display_name: "&cCombat"
+    color: "RED"
+    icon: "DIAMOND_SWORD"
+    description: "Combat-related achievements"
+  BEDS:
+    display_name: "&eBeds"
+    color: "YELLOW"
+    icon: "BED"
+    description: "Bed-related achievements"
+  WINS:
+    display_name: "&aWins"
+    color: "GREEN"
+    icon: "GOLDEN_CHEST"
+    description: "Win-related achievements"
+  GAMES:
+    display_name: "&bGames"
+    color: "BLUE"
+    icon: "CLOCK"
+    description: "Game-related achievements"
+  SPECIAL:
+    display_name: "&dSpecial"
+    color: "PURPLE"
+    icon: "STAR"
+    description: "Special achievements"
+
+# Achievement Definitions
+achievements:
+  # General Achievements
+  first_game:
+    category: "GENERAL"
+    name: "&fFirst Game"
+    description: "&7Play your first BedWars game"
+    required_amount: 1
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 100"
+    message: "&aCongratulations! You completed your first achievement!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  games_played_10:
+    category: "GAMES"
+    name: "&bVeteran Player"
+    description: "&7Play 10 BedWars games"
+    required_amount: 10
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 500"
+    message: "&aYou've played 10 games! Keep it up!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  games_played_50:
+    category: "GAMES"
+    name: "&bBedWars Veteran"
+    description: "&7Play 50 BedWars games"
+    required_amount: 50
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 2000"
+    message: "&aAmazing! You're a true BedWars veteran!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  games_played_100:
+    category: "GAMES"
+    name: "&bBedWars Master"
+    description: "&7Play 100 BedWars games"
+    required_amount: 100
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 5000"
+    message: "&aIncredible! You've mastered BedWars!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  # Combat Achievements
+  first_kill:
+    category: "COMBAT"
+    name: "&cFirst Blood"
+    description: "&7Get your first kill"
+    required_amount: 1
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 150"
+    message: "&aFirst blood! You've made your first kill!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  kills_10:
+    category: "COMBAT"
+    name: "&cKiller"
+    description: "&7Get 10 kills"
+    required_amount: 10
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 1000"
+    message: "&aYou're becoming a true killer!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  kills_50:
+    category: "COMBAT"
+    name: "&cMass Murderer"
+    description: "&7Get 50 kills"
+    required_amount: 50
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 5000"
+    message: "&aYou're a mass murderer!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  final_kills_5:
+    category: "COMBAT"
+    name: "&cFinal Kill Specialist"
+    description: "&7Get 5 final kills"
+    required_amount: 5
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 750"
+    message: "&aYou're a final kill specialist!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  final_kills_20:
+    category: "COMBAT"
+    name: "&cFinal Kill Master"
+    description: "&7Get 20 final kills"
+    required_amount: 20
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 3000"
+    message: "&aYou're a final kill master!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  # Bed Achievements
+  first_bed_break:
+    category: "BEDS"
+    name: "&eBed Breaker"
+    description: "&7Break your first bed"
+    required_amount: 1
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 200"
+    message: "&aYou've broken your first bed!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  beds_broken_10:
+    category: "BEDS"
+    name: "&eBed Destroyer"
+    description: "&7Break 10 beds"
+    required_amount: 10
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 1500"
+    message: "&aYou're a bed destroyer!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  beds_broken_50:
+    category: "BEDS"
+    name: "&eBed Annihilator"
+    description: "&7Break 50 beds"
+    required_amount: 50
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 7500"
+    message: "&aYou've annihilated 50 beds!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  # Win Achievements
+  first_win:
+    category: "WINS"
+    name: "&aFirst Victory"
+    description: "&7Win your first game"
+    required_amount: 1
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 300"
+    message: "&aCongratulations on your first victory!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  wins_5:
+    category: "WINS"
+    name: "&aWinner"
+    description: "&7Win 5 games"
+    required_amount: 5
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 1500"
+    message: "&aYou're a true winner!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  wins_20:
+    category: "WINS"
+    name: "&aChampion"
+    description: "&7Win 20 games"
+    required_amount: 20
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 6000"
+    message: "&aYou're a champion!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  wins_50:
+    category: "WINS"
+    name: "&aBedWars Legend"
+    description: "&7Win 50 games"
+    required_amount: 50
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 15000"
+    message: "&aYou're a BedWars legend!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  # Special Achievements
+  perfect_game:
+    category: "SPECIAL"
+    name: "&dPerfect Game"
+    description: "&7Win a game without dying"
+    required_amount: 1
+    reward:
+      type: "COMMAND"
+      value: "eco give %player% 1000"
+    message: "&aPerfect game! You didn't die once!"
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    particles: "VILLAGER_HAPPY"
+    
+  # Additional achievements can be added here...
+
+# Achievement Settings
+settings:
+  # Enable achievement system
+  enabled: true
+  
+  # Enable achievement notifications
+  notifications: true
+  
+  # Enable achievement sound effects
+  sounds: true
+  
+  # Enable achievement particle effects
+  particles: true
+  
+  # Enable achievement commands
+  commands: true
+  
+  # Enable achievement statistics
+  statistics: true
+  
+  # Achievement data save interval (in minutes)
+  save_interval: 5
+  
+  # Achievement data save format (JSON, YAML, MYSQL, SQLITE)
+  save_format: "JSON"
+  
+  # Achievement data save location
+  save_location: "data/achievements/"
