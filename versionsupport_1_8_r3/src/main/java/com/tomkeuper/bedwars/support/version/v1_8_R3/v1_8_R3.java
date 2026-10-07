@@ -804,6 +804,7 @@ public class v1_8_R3 extends VersionSupport {
     @Override
     public void registerVersionListeners() {
         new VersionCommon(this);
+        Bukkit.getPluginManager().registerEvents(new VanillaAchievementListener(), getPlugin());
     }
 
     @Override

@@ -58,9 +58,13 @@ public class AchievementManager implements IAchievementManager {
     private String saveLocation = "data/achievements/";
 
     public AchievementManager() {
-        this.plugin = BedWars.getInstance();
+        this(BedWars.getInstance());
+    }
+
+    public AchievementManager(Plugin plugin) {
+        this.plugin = Objects.requireNonNull(plugin, "plugin");
         // Initialize achievement config
-        new AchievementConfig(plugin, "achievements", plugin.getDataFolder().getPath());
+        new AchievementConfig(plugin, "achievements", plugin.getDataFolder().getPath(), this);
     }
 
     @Override
@@ -286,7 +290,7 @@ public class AchievementManager implements IAchievementManager {
         if (achievement == null) return;
         
         // Send title and subtitle
-        player.sendTitle("§aAchievement Unlocked!", achievement.getName(), 10, 60, 20);
+        BedWars.nms.sendTitle(player, "§aAchievement Unlocked!", achievement.getName(), 10, 60, 20);
         
         // Play sound
         if (soundsEnabled) {
@@ -295,7 +299,9 @@ public class AchievementManager implements IAchievementManager {
         
         // Send particles
         if (particlesEnabled) {
-            player.getWorld().spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, player.getLocation(), 10);
+            for (int i = 0; i < 10; i++) {
+                BedWars.nms.playVillagerEffect(player, player.getLocation());
+            }
         }
         
         // Send chat message

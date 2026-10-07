@@ -1,5 +1,6 @@
 package com.tomkeuper.bedwars.listeners;
 
+import com.tomkeuper.bedwars.BedWars;
 import com.tomkeuper.bedwars.api.arena.GameState;
 import com.tomkeuper.bedwars.api.arena.IArena;
 import com.tomkeuper.bedwars.api.events.gameplay.GameStateChangeEvent;
@@ -62,12 +63,12 @@ public class ArenaListener implements Listener {
                                 currentPlayers.stream()
                                         .filter(arena::isPlayer)
                                         .forEach(p -> {
-                                            if (p.getInventory().contains(Material.WOODEN_SWORD) &&
+                                            if (p.getInventory().contains(Material.valueOf(BedWars.getForCurrentVersion("WOOD_SWORD", "WOOD_SWORD", "WOODEN_SWORD"))) &&
                                                     (p.getInventory().contains(Material.STONE_SWORD) ||
-                                                            p.getInventory().contains(Material.GOLDEN_SWORD) ||
+                                                            p.getInventory().contains(Material.valueOf(BedWars.getForCurrentVersion("GOLD_SWORD", "GOLD_SWORD", "GOLDEN_SWORD"))) ||
                                                             p.getInventory().contains(Material.IRON_SWORD) ||
                                                             p.getInventory().contains(Material.DIAMOND_SWORD))) {
-                                                p.getInventory().remove(Material.WOODEN_SWORD);
+                                                p.getInventory().remove(Material.valueOf(BedWars.getForCurrentVersion("WOOD_SWORD", "WOOD_SWORD", "WOODEN_SWORD")));
                                             }
                                         });
                             }

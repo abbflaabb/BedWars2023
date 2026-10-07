@@ -346,6 +346,9 @@ public class Arena implements IArena {
             String[] rule = s.split(":");
             if (rule.length == 2) world.setGameRuleValue(rule[0], rule[1]);
         }
+        // Apply to existing arena configurations as well as newly created maps.
+        world.setGameRuleValue("sendCommandFeedback", "false");
+        world.setGameRuleValue("commandBlockOutput", "false");
         world.setAutoSave(false);
 
         /* Clear setup armor-stands */
@@ -1419,6 +1422,19 @@ public class Arena implements IArena {
         return players;
     }
 
+    @Override
+    public Player getPlayer(UUID player) {
+        if (player == null) return null;
+
+        for (Player arenaPlayer : players) {
+            if (arenaPlayer.getUniqueId().equals(player)) return arenaPlayer;
+        }
+        for (Player spectator : spectators) {
+            if (spectator.getUniqueId().equals(player)) return spectator;
+        }
+        return null;
+    }
+
     /**
      * Get the max number of players that can play on this arena.
      */
@@ -1426,6 +1442,7 @@ public class Arena implements IArena {
     public int getMaxPlayers() {
         return maxPlayers;
     }
+
 
     /**
      * Get the arena name as a message that can be used on signs etc.

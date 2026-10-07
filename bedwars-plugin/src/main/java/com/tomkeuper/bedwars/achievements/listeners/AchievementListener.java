@@ -24,13 +24,11 @@ import com.tomkeuper.bedwars.BedWars;
 import com.tomkeuper.bedwars.api.achievements.IAchievementManager;
 import com.tomkeuper.bedwars.api.achievements.IAchievement;
 import com.tomkeuper.bedwars.api.arena.IArena;
-import com.tomkeuper.bedwars.api.events.PlayerArenaDeathEvent;
-import com.tomkeuper.bedwars.api.events.PlayerArenaJoinEvent;
-import com.tomkeuper.bedwars.api.events.PlayerArenaLeaveEvent;
-import com.tomkeuper.bedwars.api.events.PlayerArenaWinEvent;
-import com.tomkeuper.bedwars.api.events.PlayerBedBreakEvent;
-import com.tomkeuper.bedwars.api.events.PlayerKillEvent;
-import com.tomkeuper.bedwars.api.events.PlayerFinalKillEvent;
+import com.tomkeuper.bedwars.api.events.player.PlayerBedBreakEvent;
+import com.tomkeuper.bedwars.api.events.player.PlayerJoinArenaEvent;
+import com.tomkeuper.bedwars.api.events.player.PlayerKillEvent;
+import com.tomkeuper.bedwars.api.events.player.PlayerLeaveArenaEvent;
+import com.tomkeuper.bedwars.api.events.gameplay.GameEndEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -39,6 +37,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 
+import java.util.List;
 import java.util.UUID;
 
 public class AchievementListener implements Listener {
@@ -71,7 +70,7 @@ public class AchievementListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerArenaJoin(PlayerArenaJoinEvent event) {
+    public void onPlayerArenaJoin(PlayerJoinArenaEvent event) {
         Player player = event.getPlayer();
         IArena arena = event.getArena();
         
@@ -86,7 +85,7 @@ public class AchievementListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerArenaLeave(PlayerArenaLeaveEvent event) {
+    public void onPlayerArenaLeave(PlayerLeaveArenaEvent event) {
         Player player = event.getPlayer();
         IArena arena = event.getArena();
         
@@ -95,32 +94,24 @@ public class AchievementListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerArenaDeath(PlayerArenaDeathEvent event) {
-        Player player = event.getPlayer();
+    public void onGameEnd(GameEndEvent event) {
+        List<UUID> winners = event.getWinners();
         IArena arena = event.getArena();
         
-        // Increment death counter
-        incrementAchievementProgress(player, "deaths");
-        
-        // Check for perfect game achievement (only if player hasn't died before)
-        if (getAchievementProgress(player, "deaths") == 1) {
-            checkPerfectGameAchievement(player);
+        // Increment wins counter for all winners
+        for (UUID winnerUUID : winners) {
+            Player winner = arena.getPlayer(winnerUUID);
+            if (winner != null) {
+                // Increment wins counter
+                incrementAchievementProgress(winner, "wins");
+                
+                // Check for win achievements
+                checkWinAchievements(winner);
+                
+                // Check for perfect game achievement
+                checkPerfectGameAchievement(winner);
+            }
         }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerArenaWin(PlayerArenaWinEvent event) {
-        Player player = event.getPlayer();
-        IArena arena = event.getArena();
-        
-        // Increment wins counter
-        incrementAchievementProgress(player, "wins");
-        
-        // Check for win achievements
-        checkWinAchievements(player);
-        
-        // Check for perfect game achievement
-        checkPerfectGameAchievement(player);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -138,25 +129,19 @@ public class AchievementListener implements Listener {
             
             // Check for kill achievements
             checkKillAchievements(killer);
+            
+            // Check if it's a final kill
+            if (event.getCause().isFinalKill()) {
+                // Increment final kill counter for killer
+                incrementAchievementProgress(killer, "final_kills");
+                
+                // Check for final kill achievements
+                checkFinalKillAchievements(killer);
+            }
         }
         
         // Increment death counter for victim
         incrementAchievementProgress(victim, "deaths");
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerFinalKill(PlayerFinalKillEvent event) {
-        Player killer = event.getKiller();
-        Player victim = event.getVictim();
-        IArena arena = event.getArena();
-        
-        if (killer != null && killer != victim) {
-            // Increment final kill counter for killer
-            incrementAchievementProgress(killer, "final_kills");
-            
-            // Check for final kill achievements
-            checkFinalKillAchievements(killer);
-        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

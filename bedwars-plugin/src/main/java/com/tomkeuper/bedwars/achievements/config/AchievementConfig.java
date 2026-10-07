@@ -20,46 +20,43 @@
 
 package com.tomkeuper.bedwars.achievements.config;
 
-import com.tomkeuper.bedwars.api.configuration.ConfigManager;
-import com.tomkeuper.bedwars.api.configuration.ConfigPath;
 import com.tomkeuper.bedwars.achievements.AchievementManager;
+import com.tomkeuper.bedwars.api.configuration.ConfigManager;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
-import java.io.File;
-import java.util.List;
-import java.util.Map;
 
 public class AchievementConfig extends ConfigManager {
 
     private final AchievementManager achievementManager;
 
     public AchievementConfig(Plugin plugin, String name, String path) {
+        this(plugin, name, path, com.tomkeuper.bedwars.BedWars.getAchievementManager());
+    }
+
+    public AchievementConfig(Plugin plugin, String name, String path, AchievementManager achievementManager) {
         super(plugin, name, path);
-        this.achievementManager = new AchievementManager();
+        this.achievementManager = java.util.Objects.requireNonNull(achievementManager, "achievementManager");
         loadAchievements();
     }
 
-    @Override
     public void onLoad() {
         // Load achievements from config
         loadAchievements();
     }
 
-    @Override
     public void onStartup() {
         // Initialize achievement system
         achievementManager.initializeAchievements();
     }
 
-    @Override
     public void onShutdown() {
         // Save achievement data
         achievementManager.saveAllAchievementData();
     }
 
     private void loadAchievements() {
-        YamlConfiguration config = getConfig();
+        YamlConfiguration config = getYml();
         
         // Load categories
         if (config.contains("categories")) {

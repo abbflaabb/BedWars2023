@@ -93,7 +93,6 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.logging.Level;
 
-import static com.tomkeuper.bedwars.api.language.Language.getList;
 
 public final class v1_21_R1 extends VersionSupport {
 

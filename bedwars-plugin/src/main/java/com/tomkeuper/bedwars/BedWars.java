@@ -67,7 +67,6 @@ import com.tomkeuper.bedwars.database.H2;
 import com.tomkeuper.bedwars.database.MySQL;
 import com.tomkeuper.bedwars.database.SQLite;
 import com.tomkeuper.bedwars.achievements.AchievementManager;
-import com.tomkeuper.bedwars.achievements.config.AchievementConfig;
 import com.tomkeuper.bedwars.api.achievements.IAchievementManager;
 import com.tomkeuper.bedwars.halloween.HalloweenSpecial;
 import com.tomkeuper.bedwars.hologram.HologramManager;
@@ -111,6 +110,7 @@ import com.tomkeuper.bedwars.utils.ItemBuilder;
 import com.tomkeuper.bedwars.utils.SlimLogger;
 import de.dytanic.cloudnet.wrapper.Wrapper;
 import io.github.slimjar.app.builder.ApplicationBuilder;
+import lombok.Getter;
 import me.neznamy.tab.api.TabAPI;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bstats.bukkit.Metrics;
@@ -188,7 +188,8 @@ public class BedWars extends JavaPlugin {
     private boolean serverSoftwareSupport = true, papiSupportLoaded = false, vaultEconomyLoaded = false, vaultChatLoaded = false;
 
     private static com.tomkeuper.bedwars.api.BedWars api;
-
+    @Getter
+    public static BedWars instance;
     @Override
     public void onLoad() {
 
@@ -225,6 +226,7 @@ public class BedWars extends JavaPlugin {
         }
 
         plugin = this;
+        instance = this;
 
         /* Load version support */
         //noinspection rawtypes
@@ -305,16 +307,12 @@ public class BedWars extends JavaPlugin {
 
         generators = new GeneratorsConfig(this, "generators", this.getDataFolder().getPath());
         // Initialize Achievement Manager
-        achievementManager = new AchievementManager();
-        new AchievementConfig(this, "achievements", this.getDataFolder().getPath());
+        achievementManager = new AchievementManager(this);
         // Initialize signs config after the main config
         if (getServerType() != ServerType.BUNGEE) {
             signs = new SignsConfig(this, "signs", this.getDataFolder().getPath());
         }
 
-        // Initialize Achievement Manager
-        achievementManager = new AchievementManager();
-        new AchievementConfig(this, "achievements", this.getDataFolder().getPath());
     }
 
     @Override

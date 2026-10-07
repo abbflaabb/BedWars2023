@@ -28,6 +28,9 @@ import com.tomkeuper.bedwars.api.achievements.AchievementStats;
 import com.tomkeuper.bedwars.api.command.ParentCommand;
 import com.tomkeuper.bedwars.api.command.SubCommand;
 import com.tomkeuper.bedwars.api.configuration.ConfigPath;
+import com.tomkeuper.bedwars.utils.gui.GUIInventory;
+import com.tomkeuper.bedwars.utils.ItemBuilder;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -43,139 +46,229 @@ public class CmdACHIEVEMENTS extends SubCommand {
     }
 
     @Override
-    public boolean execute(String[] args, CommandSender s) {
-        if (!(s instanceof Player)) {
-            s.sendMessage("§cThis command can only be used by players.");
-            return true;
-        }
-
-        Player player = (Player) s;
-        IAchievementManager manager = BedWars.getAchievementManager();
+        public boolean execute(String[] args, CommandSender s) {
+            if (!(s instanceof Player)) {
+                s.sendMessage("§cThis command can only be used by players.");
+                return true;
+            }
         
-        // Check if achievements are enabled
-        if (manager == null) {
-            player.sendMessage("§cAchievements are not enabled.");
-            return true;
-        }
-
-        // If no arguments, show achievement menu
-        if (args.length == 0) {
-            showAchievementMenu(player, manager);
-            return true;
-        }
-
-        // Handle subcommands
-        switch (args[0].toLowerCase()) {
-            case "list":
-                showAchievementList(player, manager);
-                break;
-            case "stats":
-                showAchievementStats(player, manager);
-                break;
-            case "progress":
-                showAchievementProgress(player, manager);
-                break;
-            case "help":
-            default:
-                showHelp(player);
-                break;
-        }
-        return true;
-    }
-
-    private void showAchievementMenu(Player player, IAchievementManager manager) {
-        player.sendMessage("");
-        player.sendMessage("§6§l=== BedWars Achievements ===");
-        player.sendMessage("");
-        player.sendMessage("§e/bw achievements list §7- Show all achievements");
-        player.sendMessage("§e/bw achievements stats §7- Show your achievement stats");
-        player.sendMessage("§e/bw achievements progress §7- Show your achievement progress");
-        player.sendMessage("");
-    }
-
-    private void showAchievementList(Player player, IAchievementManager manager) {
-        player.sendMessage("");
-        player.sendMessage("§6§l=== Achievement List ===");
-        player.sendMessage("");
+            Player player = (Player) s;
+            IAchievementManager manager = BedWars.getAchievementManager();
         
-        // Group achievements by category
+            // Check if achievements are enabled
+            if (manager == null) {
+                player.sendMessage("§cAchievements are not enabled.");
+                return true;
+            }
+        
+            // If no arguments, show achievement GUI
+            if (args.length == 0) {
+                showAchievementGUI(player, manager);
+                return true;
+            }
+        
+            // Handle subcommands
+            switch (args[0].toLowerCase()) {
+                case "list":
+                    showAchievementListGUI(player, manager);
+                    break;
+                case "stats":
+                    showAchievementStatsGUI(player, manager);
+                    break;
+                case "progress":
+                    showAchievementProgressGUI(player, manager);
+                    break;
+                case "help":
+                default:
+                    showHelp(player);
+                    break;
+            }
+            return true;
+        }
+
+    private void showAchievementGUI(Player player, IAchievementManager manager) {
+        GUIInventory gui = new GUIInventory(BedWars.getGUIManager(), "Achievements", 9, 1);
+        
+        // Create glass border
+        for (int i = 0; i < 9; i++) {
+            if (i == 4) continue; // Skip center slot
+            gui.addItem(i, new ItemBuilder(Material.STAINED_GLASS_PANE).setName(" ").setDurability((short) 7).build());
+        }
+        
+        // Center slot - main achievements button
+        ItemBuilder mainItem = new ItemBuilder(Material.BOOK);
+        mainItem.setName("§6§lAchievements");
+        mainItem.setLore(Arrays.asList(
+            "§7View all your achievements",
+            "§7and track your progress",
+            "",
+            "§eClick to browse achievements"
+        ));
+        gui.addItem(4, mainItem.build());
+        
+        // Open GUI
+        gui.open(player);
+    }
+    
+    private void showAchievementListGUI(Player player, IAchievementManager manager) {
+        GUIInventory gui = new GUIInventory(BedWars.getGUIManager(), "Achievement List", 9, 6);
+        
+        // Create glass border
+        for (int i = 0; i < 9; i++) {
+            gui.addItem(i, new ItemBuilder(Material.STAINED_GLASS_PANE).setName(" ").setDurability((short) 7).build());
+        }
+        for (int i = 45; i < 54; i++) {
+            gui.addItem(i, new ItemBuilder(Material.STAINED_GLASS_PANE).setName(" ").setDurability((short) 7).build());
+        }
+        
+        // Title
+        ItemBuilder title = new ItemBuilder(Material.BOOK);
+        title.setName("§6§lAchievement List");
+        title.setLore(Arrays.asList(
+            "§7Browse all available achievements",
+            "§7and track your progress"
+        ));
+        gui.addItem(4, title.build());
+        
+        // Add achievements by category
+        int slot = 10;
         for (AchievementCategory category : AchievementCategory.values()) {
             List<IAchievement> achievements = manager.getAchievementsByCategory(category);
             if (achievements.isEmpty()) continue;
             
-            player.sendMessage("§e§l" + category.getDisplayName() + ":");
-            for (IAchievement achievement : achievements) {
-                boolean completed = achievement.isCompleted(player);
-                String status = completed ? "§a✔" : "§c✘";
-                player.sendMessage("  " + status + " §f" + achievement.getName() + 
-                        " §7- " + achievement.getDescription() + 
-                        " §8(" + achievement.getFormattedProgress(player) + ")");
+            // Category header
+            ItemBuilder categoryItem = new ItemBuilder(Material.PAPER);
+            categoryItem.setName("§e§l" + category.getDisplayName());
+            categoryItem.setLore(Arrays.asList(
+                "§7" + achievements.size() + " achievements",
+                "",
+                "§eClick to view"
+            ));
+            gui.addItem(slot, categoryItem.build());
+            
+            slot++;
+            if (slot % 9 == 8) {
+                slot += 2;
             }
-            player.sendMessage("");
+            if (slot >= 45) break;
         }
+        
+        // Back button
+        ItemBuilder backItem = new ItemBuilder(Material.ARROW);
+        backItem.setName("§c§lBack");
+        backItem.setLore(Arrays.asList("§eClick to return"));
+        gui.addItem(49, backItem.build());
+        
+        // Open GUI
+        gui.open(player);
     }
-
-    private void showAchievementStats(Player player, IAchievementManager manager) {
+    
+    private void showAchievementStatsGUI(Player player, IAchievementManager manager) {
+        GUIInventory gui = new GUIInventory(BedWars.getGUIManager(), "Achievement Stats", 9, 4);
+        
+        // Create glass border
+        for (int i = 0; i < 9; i++) {
+            gui.addItem(i, new ItemBuilder(Material.STAINED_GLASS_PANE).setName(" ").setDurability((short) 7).build());
+        }
+        
+        // Stats
         AchievementStats stats = manager.getAchievementStats(player);
         
-        player.sendMessage("");
-        player.sendMessage("§6§l=== Achievement Stats ===");
-        player.sendMessage("");
-        player.sendMessage("§eTotal Achievements: §f" + stats.getTotalAchievements());
-        player.sendMessage("§eCompleted: §f" + stats.getCompletedAchievements());
-        player.sendMessage("§eCompletion: §f" + stats.getCompletionPercentage() + "%");
-        player.sendMessage("§eRemaining: §f" + stats.getRemainingAchievements());
-        player.sendMessage("");
+        ItemBuilder statsItem = new ItemBuilder(Material.BOOK);
+        statsItem.setName("§6§lYour Achievement Stats");
+        statsItem.setLore(Arrays.asList(
+            "",
+            "§eTotal Achievements: §f" + stats.getTotalAchievements(),
+            "§eCompleted: §f" + stats.getCompletedAchievements(),
+            "§eCompletion: §f" + stats.getCompletionPercentage() + "%",
+            "§eRemaining: §f" + stats.getRemainingAchievements(),
+            "",
+            "§eClick for category breakdown"
+        ));
+        gui.addItem(4, statsItem.build());
         
-        // Show category stats
-        player.sendMessage("§6§lCategory Breakdown:");
+        // Category breakdown
+        ItemBuilder categoryItem = new ItemBuilder(Material.PAPER);
+        categoryItem.setName("§e§lCategory Breakdown");
+        StringBuilder lore = new StringBuilder();
         for (Map.Entry<AchievementCategory, Integer> entry : stats.getCategoryStats().entrySet()) {
-            player.sendMessage("  §e" + entry.getKey().getDisplayName() + ": §f" + entry.getValue());
+            lore.append("§7").append(entry.getKey().getDisplayName()).append(": §f").append(entry.getValue()).append("\n");
         }
-        player.sendMessage("");
-    }
-
-    private void showAchievementProgress(Player player, IAchievementManager manager) {
-        player.sendMessage("");
-        player.sendMessage("§6§l=== Achievement Progress ===");
-        player.sendMessage("");
+        categoryItem.setLore(Arrays.asList(lore.toString().split("\n")));
+        gui.addItem(22, categoryItem.build());
         
+        // Back button
+        ItemBuilder backItem = new ItemBuilder(Material.ARROW);
+        backItem.setName("§c§lBack");
+        backItem.setLore(Arrays.asList("§eClick to return"));
+        gui.addItem(49, backItem.build());
+        
+        // Open GUI
+        gui.open(player);
+    }
+    
+    private void showAchievementProgressGUI(Player player, IAchievementManager manager) {
+        GUIInventory gui = new GUIInventory(BedWars.getGUIManager(), "Achievement Progress", 9, 6);
+        
+        // Create glass border
+        for (int i = 0; i < 9; i++) {
+            gui.addItem(i, new ItemBuilder(Material.STAINED_GLASS_PANE).setName(" ").setDurability((short) 7).build());
+        }
+        for (int i = 45; i < 54; i++) {
+            gui.addItem(i, new ItemBuilder(Material.STAINED_GLASS_PANE).setName(" ").setDurability((short) 7).build());
+        }
+        
+        // Title
+        ItemBuilder title = new ItemBuilder(Material.BOOK);
+        title.setName("§6§lAchievement Progress");
+        title.setLore(Arrays.asList(
+            "§7Track your progress towards",
+            "§7all achievements"
+        ));
+        gui.addItem(4, title.build());
+        
+        // Add achievements
+        int slot = 10;
         for (IAchievement achievement : manager.getAllAchievements()) {
+            if (slot >= 45) break;
+            
             int progress = achievement.getProgress(player);
             int required = achievement.getRequiredAmount();
             boolean completed = achievement.isCompleted(player);
             
-            String bar = getProgressBar(progress, required);
-            String status = completed ? "§a✔" : "§c✘";
+            ItemBuilder achievementItem = new ItemBuilder(Material.PAPER);
+            achievementItem.setName(completed ? "§a§l" + achievement.getName() : "§c§l" + achievement.getName());
+            achievementItem.setLore(Arrays.asList(
+                "§7" + achievement.getDescription(),
+                "",
+                "§eProgress: §f" + progress + "/" + required,
+                "§eStatus: " + (completed ? "§aCompleted" : "§cIn Progress"),
+                "",
+                "§eClick for details"
+            ));
+            gui.addItem(slot, achievementItem.build());
             
-            player.sendMessage("  " + status + " §f" + achievement.getName() + 
-                    " §7" + bar + " §8(" + progress + "/" + required + ")");
+            slot++;
+            if (slot % 9 == 8) {
+                slot += 2;
+            }
         }
-        player.sendMessage("");
-    }
-
-    private String getProgressBar(int progress, int required) {
-        int totalBars = 10;
-        int filledBars = (int) ((progress * 1.0 / required) * totalBars);
-        if (filledBars > totalBars) filledBars = totalBars;
         
-        StringBuilder bar = new StringBuilder();
-        bar.append("§a");
-        for (int i = 0; i < filledBars; i++) {
-            bar.append("■");
-        }
-        bar.append("§7");
-        for (int i = filledBars; i < totalBars; i++) {
-            bar.append("■");
-        }
-        return bar.toString();
+        // Back button
+        ItemBuilder backItem = new ItemBuilder(Material.ARROW);
+        backItem.setName("§c§lBack");
+        backItem.setLore(Arrays.asList("§eClick to return"));
+        gui.addItem(49, backItem.build());
+        
+        // Open GUI
+        gui.open(player);
     }
 
     private void showHelp(Player player) {
         player.sendMessage("");
         player.sendMessage("§6§l=== BedWars Achievements Help ===");
         player.sendMessage("");
-        player.sendMessage("§e/bw achievements §7- Show achievement menu");
+        player.sendMessage("§e/bw achievements §7- Show achievement GUI");
         player.sendMessage("§e/bw achievements list §7- Show all achievements");
         player.sendMessage("§e/bw achievements stats §7- Show your achievement stats");
         player.sendMessage("§e/bw achievements progress §7- Show your achievement progress");

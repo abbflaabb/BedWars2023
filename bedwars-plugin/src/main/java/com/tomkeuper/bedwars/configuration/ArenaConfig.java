@@ -61,6 +61,8 @@ public class ArenaConfig extends ConfigManager {
         ArrayList<String> rules = new ArrayList<>();
         rules.add("doDaylightCycle:false");
         rules.add("announceAdvancements:false");
+        rules.add("sendCommandFeedback:false");
+        rules.add("commandBlockOutput:false");
         rules.add("doInsomnia:false");
         rules.add("doImmediateRespawn:true");
         rules.add("doWeatherCycle:false");

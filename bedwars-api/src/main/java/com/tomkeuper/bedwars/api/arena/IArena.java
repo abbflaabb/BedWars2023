@@ -179,7 +179,7 @@ public interface IArena {
      * @return The maximum number of players allowed.
      */
     int getMaxPlayers();
-
+    Player getPlayer(UUID player);
     /**
      * Get the group of the arena.
      *
