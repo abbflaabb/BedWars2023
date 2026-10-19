@@ -36,9 +36,32 @@ publishing {
             groupId = rootProject.group
             version = rootProject.version.toString()
             from components.java
+            pom {
+                name = 'BedWars2023 API'
+                description = 'Developer API for BedWars2023 addons: arenas, teams, achievements and gameplay events.'
+                url = 'https://github.com/abbflaabb/BedWars2023'
+                licenses {
+                    license {
+                        name = 'GNU General Public License v3.0'
+                        url = 'https://www.gnu.org/licenses/gpl-3.0.html'
+                    }
+                }
+                scm {
+                    url = 'https://github.com/abbflaabb/BedWars2023'
+                    connection = 'scm:git:https://github.com/abbflaabb/BedWars2023.git'
+                }
+            }
         }
     }
     repositories {
+        maven {
+            name = 'GitHubPackages'
+            url = uri('https://maven.pkg.github.com/abbflaabb/BedWars2023')
+            credentials {
+                username = providers.environmentVariable('GITHUB_ACTOR').orNull
+                password = providers.environmentVariable('GITHUB_TOKEN').orNull
+            }
+        }
         maven {
             url = project.version.toString().endsWith('SNAPSHOT') ?
                     uri('https://repo.tomkeuper.com/repository/snapshots/') :

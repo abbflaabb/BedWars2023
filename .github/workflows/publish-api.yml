@@ -1,0 +1,75 @@
+name: Publish BedWars API to GitHub Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Existing release version with API assets (for example 5.0.1)'
+        required: true
+        type: string
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-api-${{ inputs.version || github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GITHUB_TOKEN: ${{ github.token }}
+      RELEASE_VERSION: ${{ inputs.version || github.event.release.tag_name }}
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          server-id: github
+      # Use the verified release artifacts: NMS dependencies may only exist in
+      # the maintainer's BuildTools cache, not on a fresh GitHub-hosted runner.
+      - name: Download and verify API release artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${RELEASE_VERSION#v}"
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          echo "API_VERSION=$VERSION" >> "$GITHUB_ENV"
+          mkdir api
+          gh release download "v$VERSION" --repo "$GITHUB_REPOSITORY" --dir api --pattern "bedwars-api-$VERSION*"
+          cd api
+          sha256sum --check "bedwars-api-$VERSION.sha256"
+          python3 - "$VERSION" <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          version = sys.argv[1]
+          root = ET.parse(f'bedwars-api-{version}.pom').getroot()
+          ns = {'m': 'http://maven.apache.org/POM/4.0.0'}
+          for key, expected in [('groupId', 'com.tomkeuper.bedwars'), ('artifactId', 'bedwars-api'), ('version', version)]:
+              assert root.findtext(f'm:{key}', namespaces=ns) == expected, key
+          PY
+      - name: Publish API, sources and Javadoc
+        shell: bash
+        run: |
+          set -euo pipefail
+          mvn --batch-mode org.apache.maven.plugins:maven-deploy-plugin:3.1.3:deploy-file \
+            -DrepositoryId=github \
+            -Durl="https://maven.pkg.github.com/$GITHUB_REPOSITORY" \
+            -Dfile="api/bedwars-api-$API_VERSION.jar" \
+            -DpomFile="api/bedwars-api-$API_VERSION.pom" \
+            -Dsources="api/bedwars-api-$API_VERSION-sources.jar" \
+            -Djavadoc="api/bedwars-api-$API_VERSION-javadoc.jar"
+      - name: Verify published API download
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir downloaded
+          curl --fail --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 \
+            --user "$GITHUB_ACTOR:$GITHUB_TOKEN" \
+            "https://maven.pkg.github.com/$GITHUB_REPOSITORY/com/tomkeuper/bedwars/bedwars-api/$API_VERSION/bedwars-api-$API_VERSION.jar" \
+            --output "downloaded/bedwars-api-$API_VERSION.jar"
+          cmp "api/bedwars-api-$API_VERSION.jar" "downloaded/bedwars-api-$API_VERSION.jar"

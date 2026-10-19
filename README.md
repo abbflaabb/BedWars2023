@@ -8,6 +8,9 @@ and multi-arena support. Maintained by Mr. Ceasar, based on the work of
 [Release notes](docs/releases/5.0.1.md) ·
 [Resource chest configuration](docs/resource-chest.md)
 
+Addon developers: [use the BedWars API from GitHub Packages](docs/api-packages.md)
+(`com.tomkeuper.bedwars:bedwars-api:5.0.1`).
+
 ## Current release: 5.0.1
 
 Fixes team chest deposits, live hologram configuration, bundled NBT dependencies,
