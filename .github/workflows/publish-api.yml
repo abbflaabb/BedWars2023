@@ -7,6 +7,10 @@ on:
         description: 'Existing release version with API assets (for example 5.0.1)'
         required: true
         type: string
+      verify_only:
+        description: 'Only verify an already published version; do not upload it again'
+        type: boolean
+        default: false
   release:
     types: [published]
 
@@ -53,6 +57,7 @@ jobs:
               assert root.findtext(f'm:{key}', namespaces=ns) == expected, key
           PY
       - name: Publish API, sources and Javadoc
+        if: ${{ inputs.verify_only != true }}
         shell: bash
         run: |
           set -euo pipefail
@@ -68,7 +73,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir downloaded
-          curl --fail --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 \
+          curl --location --fail --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 \
             --user "$GITHUB_ACTOR:$GITHUB_TOKEN" \
             "https://maven.pkg.github.com/$GITHUB_REPOSITORY/com/tomkeuper/bedwars/bedwars-api/$API_VERSION/bedwars-api-$API_VERSION.jar" \
             --output "downloaded/bedwars-api-$API_VERSION.jar"
