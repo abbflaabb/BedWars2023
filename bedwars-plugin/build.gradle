@@ -72,7 +72,9 @@ dependencies {
     compileOnly 'com.github.NEZNAMY:TAB-API:5.0.7'
     compileOnly 'de.dytanic.cloudnet:cloudnet-wrapper-jvm:3.4.5-RELEASE'
     slim 'redis.clients:jedis:5.0.2'
-    slim 'com.flowpowered:flow-nbt:2.0.2'
+    // Reset adapters reference the relocated NBT classes at startup. Bundle them
+    // with Shadow so their definitions and references use the same package.
+    implementation 'com.flowpowered:flow-nbt:2.0.2'
     slim 'com.saicone.rtag:rtag:1.5.13'
     slim 'com.saicone.rtag:rtag-block:1.5.13'
     slim 'com.saicone.rtag:rtag-entity:1.5.13'
@@ -85,7 +87,7 @@ bukkit {
     apiVersion = '1.13'
 
     author = 'Mr. Ceasar'
-    description = 'BedWars minigame by Mr Ceasar forked from BedWars1058'
+    description = 'Team-based BedWars with achievements, resource chest deposits, and multi-arena support. Maintained by Mr. Ceasar; based on BedWars2023 and BedWars1058.'
     version = "${project.version}"
 
     load = 'STARTUP'
@@ -175,6 +177,32 @@ tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.Shadow
 
 tasks.named('build') {
     dependsOn tasks.named('shadowJar')
+}
+
+def verifyBundledNbt = tasks.register('verifyBundledNbt') {
+    group = 'verification'
+    description = 'Load the relocated NBT library from the distributable plugin without server libraries.'
+    dependsOn tasks.named('shadowJar')
+    doLast {
+        def jarFile = tasks.named('shadowJar').get().archiveFile.get().asFile
+        def loader = new URLClassLoader([jarFile.toURI().toURL()] as URL[], ClassLoader.getPlatformClassLoader())
+        try {
+            def prefix = 'com.tomkeuper.bedwars.libs.flowpowered.nbt.'
+            ['Tag', 'CompoundMap', 'CompoundTag', 'IntTag',
+             'stream.NBTInputStream', 'stream.NBTOutputStream'].each { name ->
+                Class.forName(prefix + name, true, loader)
+            }
+            def intTag = loader.loadClass(prefix + 'IntTag')
+                    .getConstructor(String.class, Integer.TYPE).newInstance('packaging-check', 42)
+            assert intTag.getValue() == 42
+        } finally {
+            loader.close()
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn verifyBundledNbt
 }
 
 // Ensure ordering against other tasks

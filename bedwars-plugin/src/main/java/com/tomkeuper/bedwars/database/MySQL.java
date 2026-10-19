@@ -161,6 +161,12 @@ public class MySQL implements IDatabase {
             try (Statement statement = connection.createStatement()) {
                 statement.executeUpdate(sql);
             }
+
+            sql = "CREATE TABLE IF NOT EXISTS achievements (uuid VARCHAR(36) PRIMARY KEY, " +
+                    "progress_data TEXT, completed_data TEXT, notified_data TEXT);";
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(sql);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -563,6 +569,60 @@ public class MySQL implements IDatabase {
             e.printStackTrace();
         }
         return Language.getDefaultLanguage().getIso();
+    }
+
+    @Override
+    public void saveAchievementData(UUID uuid, String progressData, String completedData, String notifiedData) {
+        try (Connection connection = dataSource.getConnection()) {
+            if (hasAchievementData(uuid, connection)) {
+                String sql = "UPDATE achievements SET progress_data=?, completed_data=?, notified_data=? WHERE uuid = ?;";
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                    statement.setString(1, progressData);
+                    statement.setString(2, completedData);
+                    statement.setString(3, notifiedData);
+                    statement.setString(4, uuid.toString());
+                    statement.executeUpdate();
+                }
+            } else {
+                String sql = "INSERT INTO achievements (uuid, progress_data, completed_data, notified_data) VALUES (?, ?, ?, ?);";
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                    statement.setString(1, uuid.toString());
+                    statement.setString(2, progressData);
+                    statement.setString(3, completedData);
+                    statement.setString(4, notifiedData);
+                    statement.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean hasAchievementData(UUID uuid, Connection connection) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT uuid FROM achievements WHERE uuid = ?;")) {
+            statement.setString(1, uuid.toString());
+            try (ResultSet result = statement.executeQuery()) {
+                return result.next();
+            }
+        }
+    }
+
+    @Override
+    public String[] fetchAchievementData(UUID uuid) {
+        String sql = "SELECT progress_data, completed_data, notified_data FROM achievements WHERE uuid = ?;";
+        try (Connection connection = dataSource.getConnection()) {
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, uuid.toString());
+                try (ResultSet result = statement.executeQuery()) {
+                    if (result.next()) {
+                        return new String[]{result.getString(1), result.getString(2), result.getString(3)};
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override

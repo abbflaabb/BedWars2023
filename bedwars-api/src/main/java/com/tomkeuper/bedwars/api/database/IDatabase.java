@@ -170,4 +170,26 @@ public interface IDatabase {
      * @return list of player UUIDs that have Quick Buy data.
      */
     List<UUID> listQuickBuyUUIDs();
+
+    /**
+     * Save achievement data for a player.
+     *
+     * @param uuid          The UUID of the player.
+     * @param progressData  Serialized achievement progress data (achievement id to progress).
+     * @param completedData Serialized completed achievement data (achievement id to completion timestamp).
+     * @param notifiedData  Serialized set of achievement ids the player has been notified about.
+     */
+    void saveAchievementData(UUID uuid, String progressData, String completedData, String notifiedData);
+
+    /**
+     * Fetch achievement data for a player.
+     *
+     * @param uuid The UUID of the player.
+     * @return An Object array containing the serialized data, or {@code null} if the player
+     *         has no stored achievement data.
+     *         Index 0: progress data (String)
+     *         Index 1: completed data (String)
+     *         Index 2: notified data (String)
+     */
+    String[] fetchAchievementData(UUID uuid);
 }

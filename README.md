@@ -1,3 +1,28 @@
+# BedWars2023
+
+Team-based Minecraft BedWars with achievements, configurable resource chests,
+and multi-arena support. Maintained by Mr. Ceasar, based on the work of
+[Tom Keuper](https://github.com/tomkeuper/BedWars2023) and BedWars1058.
+
+[Download 5.0.1](https://github.com/abbflaabb/BedWars2023/releases/tag/v5.0.1) ·
+[Release notes](docs/releases/5.0.1.md) ·
+[Resource chest configuration](docs/resource-chest.md)
+
+## Current release: 5.0.1
+
+Fixes team chest deposits, live hologram configuration, bundled NBT dependencies,
+achievement persistence and TAB initialization. Use **Java 21** and install **TAB**.
+Stop the server before replacing the plugin JAR. See the release notes for upgrade
+steps and the limits of automated validation.
+
+## Building
+
+Set `JAVA_HOME` to JDK 21, then run `./gradlew :bedwars-plugin:build`
+(`gradlew.bat :bedwars-plugin:build` on Windows). The plugin is generated at
+`bedwars-plugin/build/libs/BedWars-5.0.1.jar`. The version is defined by
+`pluginVersion` in `gradle.properties`. Version adapters require the corresponding
+Spigot/NMS dependencies; some must be installed locally with BuildTools.
+
 ![Bedwars2023_Logo](https://github.com/tomkeuper/BedWars2023/assets/29728836/5979c0e8-1333-40a5-b43c-49ceabd06a57)
 
 [![Discord](https://discordapp.com/api/guilds/760851292826107926/widget.png?style=shield)](https://discord.gg/kPaBGwhmjf) [![bStats](https://img.shields.io/bstats/servers/18317)](#)
@@ -14,7 +39,7 @@ Once your bed is destroyed, you cannot respawn.
 This software runs on [Spigot](https://www.spigotmc.org/) and NMS.
 Spigot forks without compiled NMS code are not supported.
 Officially supported servers are [Spigot](https://www.spigotmc.org/) and [Paper](https://papermc.io/).
-You are required to use Java 11 or newer to run this plugin.
+This fork's release builds target Java 21. Use Java 21 to run the bundled version adapters.
 
 The internal world restore system is based on zipping and unzipping maps which can become
 heavy if you are still making use of HDD in 2024, and you do not have a decent CPU. For a better
@@ -22,7 +47,7 @@ and faster restore system install [SlimeWorldManager](https://www.spigotmc.org/r
 BedWars2023 will hook into it and do everything for you.
 
 # Dependencies
-- Java 11
+- Java 21
 - Spigot forks with NMS
 - [TAB](https://github.com/NEZNAMY/TAB) plugin
 

@@ -17,6 +17,7 @@ import java.util.*;
  * Startup migration for legacy Quick Buy identifiers (unscoped) → scoped default identifiers.
  * Example: blocks-category.category-content.wool → default-blocks-category.category-content.wool
  */
+@SuppressWarnings("ALL")
 public final class ShopDataMigrator {
 
     private static final String CFG_ENABLE = "shop.migration.legacyIdMigrationOnStartup";

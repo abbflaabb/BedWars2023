@@ -30,6 +30,7 @@ public class AchievementReward {
     private final int coins;
     private final int experience;
     private final String message;
+    private final String command;
 
     /**
      * Create a new achievement reward.
@@ -39,9 +40,22 @@ public class AchievementReward {
      * @param message The message to show when the achievement is completed
      */
     public AchievementReward(int coins, int experience, @NotNull String message) {
+        this(coins, experience, message, "");
+    }
+
+    /**
+     * Create a new achievement reward.
+     *
+     * @param coins The amount of coins to reward
+     * @param experience The amount of experience to reward
+     * @param message The message to show when the achievement is completed
+     * @param command The command to execute when the achievement is completed
+     */
+    public AchievementReward(int coins, int experience, @NotNull String message, @NotNull String command) {
         this.coins = coins;
         this.experience = experience;
         this.message = message;
+        this.command = command;
     }
 
     /**
@@ -70,6 +84,16 @@ public class AchievementReward {
     @NotNull
     public String getMessage() {
         return message;
+    }
+
+    /**
+     * Get the command to execute when the achievement is completed.
+     *
+     * @return The command (empty string if none)
+     */
+    @NotNull
+    public String getCommand() {
+        return command;
     }
 
     /**

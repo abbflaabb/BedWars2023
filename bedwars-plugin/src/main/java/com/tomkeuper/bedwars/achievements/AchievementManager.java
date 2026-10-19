@@ -23,14 +23,26 @@ package com.tomkeuper.bedwars.achievements;
 import com.tomkeuper.bedwars.api.achievements.*;
 import com.tomkeuper.bedwars.BedWars;
 import com.tomkeuper.bedwars.achievements.config.AchievementConfig;
+import com.tomkeuper.bedwars.api.database.IDatabase;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,13 +52,20 @@ import java.util.stream.Collectors;
 
 public class AchievementManager implements IAchievementManager {
 
+    private static final Gson GSON = new Gson();
+    // Interface types prevent old server-provided Gson versions from reflecting
+    // on JDK-internal collection implementations (for example EmptySet).
+    private static final Type PROGRESS_TYPE = new TypeToken<Map<String, Integer>>() {}.getType();
+    private static final Type COMPLETED_TYPE = new TypeToken<Map<String, Long>>() {}.getType();
+    private static final Type NOTIFIED_TYPE = new TypeToken<Set<String>>() {}.getType();
+
     private final Plugin plugin;
     private final Map<String, IAchievement> achievements = new ConcurrentHashMap<>();
     private final Map<UUID, Map<String, Integer>> playerProgress = new ConcurrentHashMap<>();
     private final Map<UUID, Map<String, Long>> completedAchievements = new ConcurrentHashMap<>();
     private final Map<UUID, Set<String>> notifiedAchievements = new ConcurrentHashMap<>();
     private final Map<String, AchievementCategory> categories = new ConcurrentHashMap<>();
-    
+
     private boolean enabled = true;
     private boolean notificationsEnabled = true;
     private boolean soundsEnabled = true;
@@ -58,7 +77,7 @@ public class AchievementManager implements IAchievementManager {
     private String saveLocation = "data/achievements/";
 
     public AchievementManager() {
-        this(BedWars.getInstance());
+        this(BedWars.plugin);
     }
 
     public AchievementManager(Plugin plugin) {
@@ -106,22 +125,24 @@ public class AchievementManager implements IAchievementManager {
     public void completeAchievement(@NotNull Player player, @NotNull String achievementId) {
         completedAchievements.computeIfAbsent(player.getUniqueId(), k -> new ConcurrentHashMap<>())
                 .put(achievementId, System.currentTimeMillis());
-        
+
         // Mark as notified
         notifiedAchievements.computeIfAbsent(player.getUniqueId(), k -> ConcurrentHashMap.newKeySet())
                 .add(achievementId);
-        
+
         // Give rewards
         IAchievement achievement = getAchievement(achievementId);
         if (achievement != null && commandsEnabled) {
             AchievementReward reward = achievement.getReward();
             if (reward != null) {
                 // Execute commands
-                String command = reward.getMessage().replace("%player%", player.getName());
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                String command = reward.getCommand().replace("%player%", player.getName());
+                if (!command.isEmpty()) {
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                }
             }
         }
-        
+
         // Send notification
         if (notificationsEnabled) {
             sendAchievementNotification(player, achievement);
@@ -137,12 +158,12 @@ public class AchievementManager implements IAchievementManager {
     public @NotNull AchievementStats getAchievementStats(@NotNull Player player) {
         Map<String, Long> completed = getCompletedAchievements(player);
         Map<AchievementCategory, Integer> categoryStats = new HashMap<>();
-        
+
         // Initialize all categories with 0
         for (AchievementCategory category : AchievementCategory.values()) {
             categoryStats.put(category, 0);
         }
-        
+
         // Count completed achievements by category
         for (Map.Entry<String, Long> entry : completed.entrySet()) {
             IAchievement achievement = getAchievement(entry.getKey());
@@ -151,14 +172,14 @@ public class AchievementManager implements IAchievementManager {
                 categoryStats.put(category, categoryStats.getOrDefault(category, 0) + 1);
             }
         }
-        
+
         long firstTimestamp = completed.values().stream()
                 .min(Long::compare)
                 .orElse(System.currentTimeMillis());
         long lastTimestamp = completed.values().stream()
                 .max(Long::compare)
                 .orElse(System.currentTimeMillis());
-        
+
         return new AchievementStats(getAllAchievements().size(), completed.size(), categoryStats, firstTimestamp, lastTimestamp);
     }
 
@@ -183,14 +204,14 @@ public class AchievementManager implements IAchievementManager {
     @Override
     public void saveAllAchievementData() {
         if (!enabled) return;
-        
+
         try {
             // Create save directory if it doesn't exist
             Path saveDir = Paths.get(plugin.getDataFolder().getPath(), saveLocation);
             if (!Files.exists(saveDir)) {
                 Files.createDirectories(saveDir);
             }
-            
+
             // Save player data based on format
             if (saveFormat.equalsIgnoreCase("JSON")) {
                 saveJsonData();
@@ -200,8 +221,10 @@ public class AchievementManager implements IAchievementManager {
                 saveSqliteData();
             } else if (saveFormat.equalsIgnoreCase("MYSQL")) {
                 saveMySqlData();
+            } else if (saveFormat.equalsIgnoreCase("H2")) {
+                saveH2Data();
             }
-            
+
         } catch (IOException e) {
             plugin.getLogger().severe("Failed to save achievement data: " + e.getMessage());
         }
@@ -210,7 +233,7 @@ public class AchievementManager implements IAchievementManager {
     @Override
     public void loadAchievementData(@NotNull Player player) {
         if (!enabled) return;
-        
+
         try {
             // Load player data based on format
             if (saveFormat.equalsIgnoreCase("JSON")) {
@@ -221,33 +244,115 @@ public class AchievementManager implements IAchievementManager {
                 loadSqliteData(player);
             } else if (saveFormat.equalsIgnoreCase("MYSQL")) {
                 loadMySqlData(player);
+            } else if (saveFormat.equalsIgnoreCase("H2")) {
+                loadH2Data(player);
             }
-            
+
         } catch (IOException e) {
             plugin.getLogger().severe("Failed to load achievement data for " + player.getName() + ": " + e.getMessage());
         }
     }
 
-    // Helper methods
-    public void createCategory(String id, String displayName, String color, String icon, String description) {
-        categories.put(id, AchievementCategory.valueOf(id.toUpperCase()));
+    @Override
+    public void saveAchievementData(@NotNull Player player) {
+        if (!enabled) return;
+
+        try {
+            // Save player data based on format
+            if (saveFormat.equalsIgnoreCase("JSON")) {
+                saveJsonData(player);
+            } else if (saveFormat.equalsIgnoreCase("YAML")) {
+                saveYamlData(player);
+            } else if (saveFormat.equalsIgnoreCase("SQLITE")) {
+                saveSqliteData(player);
+            } else if (saveFormat.equalsIgnoreCase("MYSQL")) {
+                saveMySqlData(player);
+            } else if (saveFormat.equalsIgnoreCase("H2")) {
+                saveH2Data(player);
+            }
+
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to save achievement data for " + player.getName() + ": " + e.getMessage());
+        }
     }
 
-    public void createAchievement(String id, String categoryId, String name, String description, 
-                                 int requiredAmount, String rewardType, String rewardValue,
-                                 String message, String sound, String particles) {
-        AchievementCategory category = AchievementCategory.valueOf(categoryId.toUpperCase());
-        AchievementReward reward = new AchievementReward(0, 0, message);
-        
+    // Helper methods
+    public void createCategory(String id, String displayName, String color, String icon, String description) {
+        try {
+            categories.put(id, AchievementCategory.valueOf(id.toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("Unknown achievement category: " + id);
+        }
+    }
+
+    public void createAchievement(String id, String categoryId, String name, String description,
+                                  int requiredAmount, String rewardType, String rewardValue,
+                                  String message, String sound, String particles) {
+        AchievementCategory category;
+        try {
+            category = AchievementCategory.valueOf(categoryId.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("Unknown achievement category for achievement " + id + ": " + categoryId);
+            return;
+        }
+        AchievementReward reward = new AchievementReward(0, 0, message, rewardValue);
+
         // Create achievement implementation
-        IAchievement achievement = new AchievementImpl(id, name, description, category, 
+        IAchievement achievement = new BasicAchievement(id, name, description, category,
                 requiredAmount, reward, this);
         achievements.put(id, achievement);
     }
 
+    @Override
     public void initializeAchievements() {
         // Load achievements from config
         // This will be called from AchievementConfig
+    }
+
+    // Getters
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    @Override
+    public boolean isNotificationsEnabled() {
+        return notificationsEnabled;
+    }
+
+    @Override
+    public boolean isSoundsEnabled() {
+        return soundsEnabled;
+    }
+
+    @Override
+    public boolean isParticlesEnabled() {
+        return particlesEnabled;
+    }
+
+    @Override
+    public boolean isCommandsEnabled() {
+        return commandsEnabled;
+    }
+
+    @Override
+    public boolean isStatisticsEnabled() {
+        return statisticsEnabled;
+    }
+
+    @Override
+    public int getSaveInterval() {
+        return saveInterval;
+    }
+
+    @Override
+    public String getSaveFormat() {
+        return saveFormat;
+    }
+
+    @Override
+    public String getSaveLocation() {
+        return saveLocation;
     }
 
     public void setEnabled(boolean enabled) {
@@ -288,57 +393,251 @@ public class AchievementManager implements IAchievementManager {
 
     private void sendAchievementNotification(@NotNull Player player, @Nullable IAchievement achievement) {
         if (achievement == null) return;
-        
-        // Send title and subtitle
-        BedWars.nms.sendTitle(player, "§aAchievement Unlocked!", achievement.getName(), 10, 60, 20);
-        
+
+        // Send title and subtitle (translate &-codes coming from the config)
+        BedWars.nms.sendTitle(player, "§aAchievement Unlocked!",
+                ChatColor.translateAlternateColorCodes('&', achievement.getName()), 10, 60, 20);
+
         // Play sound
         if (soundsEnabled) {
             player.playSound(player.getLocation(), "ENTITY_EXPERIENCE_ORB_PICKUP", 1.0f, 1.0f);
         }
-        
+
         // Send particles
         if (particlesEnabled) {
             for (int i = 0; i < 10; i++) {
                 BedWars.nms.playVillagerEffect(player, player.getLocation());
             }
         }
-        
+
         // Send chat message
-        player.sendMessage("§6§l[ACHIEVEMENT] §r" + achievement.getName());
-        player.sendMessage("§7" + achievement.getDescription());
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', "§6§l[ACHIEVEMENT] §r" + achievement.getName()));
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', "§7" + achievement.getDescription()));
     }
+
+    // ---------------------------------------------------------------------
+    // Persistence helpers
+    // ---------------------------------------------------------------------
+
+    private File getSaveDirectory() {
+        File dir = new File(plugin.getDataFolder(), saveLocation);
+        if (!dir.exists() && !dir.mkdirs()) {
+            plugin.getLogger().warning("Could not create achievement data directory: " + dir.getPath());
+        }
+        return dir;
+    }
+
+    private File getPlayerFile(UUID uuid, String extension) {
+        return new File(getSaveDirectory(), uuid.toString() + "." + extension);
+    }
+
+    private Set<UUID> collectPlayerIds() {
+        Set<UUID> uuids = new HashSet<>();
+        uuids.addAll(playerProgress.keySet());
+        uuids.addAll(completedAchievements.keySet());
+        uuids.addAll(notifiedAchievements.keySet());
+        return uuids;
+    }
+
+    private String getProgressJson(UUID uuid) {
+        return GSON.toJson(playerProgress.getOrDefault(uuid, Collections.emptyMap()), PROGRESS_TYPE);
+    }
+
+    private String getCompletedJson(UUID uuid) {
+        return GSON.toJson(completedAchievements.getOrDefault(uuid, Collections.emptyMap()), COMPLETED_TYPE);
+    }
+
+    private String getNotifiedJson(UUID uuid) {
+        return GSON.toJson(notifiedAchievements.getOrDefault(uuid, Collections.emptySet()), NOTIFIED_TYPE);
+    }
+
+    private void applyProgress(UUID uuid, @Nullable String json) {
+        if (json == null || json.trim().isEmpty()) return;
+        Map<String, Integer> data = GSON.fromJson(json, PROGRESS_TYPE);
+        if (data != null) {
+            playerProgress.put(uuid, new ConcurrentHashMap<>(data));
+        }
+    }
+
+    private void applyCompleted(UUID uuid, @Nullable String json) {
+        if (json == null || json.trim().isEmpty()) return;
+        Map<String, Long> data = GSON.fromJson(json, COMPLETED_TYPE);
+        if (data != null) {
+            completedAchievements.put(uuid, new ConcurrentHashMap<>(data));
+        }
+    }
+
+    private void applyNotified(UUID uuid, @Nullable String json) {
+        if (json == null || json.trim().isEmpty()) return;
+        Set<String> data = GSON.fromJson(json, NOTIFIED_TYPE);
+        if (data != null) {
+            Set<String> set = ConcurrentHashMap.newKeySet();
+            set.addAll(data);
+            notifiedAchievements.put(uuid, set);
+        }
+    }
+
+    @Nullable
+    private static String elementToString(@Nullable JsonElement element) {
+        if (element == null || element.isJsonNull()) return null;
+        return element.toString();
+    }
+
+    // ---------------------------------------------------------------------
+    // JSON persistence (one file per player)
+    // ---------------------------------------------------------------------
 
     private void saveJsonData() throws IOException {
-        // Implementation for JSON saving
+        for (UUID uuid : collectPlayerIds()) {
+            saveJsonData(uuid);
+        }
     }
 
-    private void saveYamlData() throws IOException {
-        // Implementation for YAML saving
+    private void saveJsonData(@NotNull Player player) throws IOException {
+        saveJsonData(player.getUniqueId());
     }
 
-    private void saveSqliteData() throws IOException {
-        // Implementation for SQLite saving
-    }
-
-    private void saveMySqlData() throws IOException {
-        // Implementation for MySQL saving
+    private void saveJsonData(UUID uuid) throws IOException {
+        JsonObject root = new JsonObject();
+        root.addProperty("uuid", uuid.toString());
+        root.add("progress", GSON.toJsonTree(playerProgress.getOrDefault(uuid, Collections.emptyMap()), PROGRESS_TYPE));
+        root.add("completed", GSON.toJsonTree(completedAchievements.getOrDefault(uuid, Collections.emptyMap()), COMPLETED_TYPE));
+        root.add("notified", GSON.toJsonTree(notifiedAchievements.getOrDefault(uuid, Collections.emptySet()), NOTIFIED_TYPE));
+        try (Writer writer = new FileWriter(getPlayerFile(uuid, "json"))) {
+            GSON.toJson(root, writer);
+        }
     }
 
     private void loadJsonData(@NotNull Player player) throws IOException {
-        // Implementation for JSON loading
+        UUID uuid = player.getUniqueId();
+        File file = getPlayerFile(uuid, "json");
+        if (!file.exists()) return;
+        try (FileReader reader = new FileReader(file)) {
+            JsonObject root = GSON.fromJson(reader, JsonObject.class);
+            if (root == null) return;
+            applyProgress(uuid, elementToString(root.get("progress")));
+            applyCompleted(uuid, elementToString(root.get("completed")));
+            applyNotified(uuid, elementToString(root.get("notified")));
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // YAML persistence (one file per player)
+    // ---------------------------------------------------------------------
+
+    private void saveYamlData() throws IOException {
+        for (UUID uuid : collectPlayerIds()) {
+            saveYamlData(uuid);
+        }
+    }
+
+    private void saveYamlData(@NotNull Player player) throws IOException {
+        saveYamlData(player.getUniqueId());
+    }
+
+    private void saveYamlData(UUID uuid) throws IOException {
+        YamlConfiguration yml = new YamlConfiguration();
+        for (Map.Entry<String, Integer> entry : playerProgress.getOrDefault(uuid, Collections.emptyMap()).entrySet()) {
+            yml.set("progress." + entry.getKey(), entry.getValue());
+        }
+        for (Map.Entry<String, Long> entry : completedAchievements.getOrDefault(uuid, Collections.emptyMap()).entrySet()) {
+            yml.set("completed." + entry.getKey(), entry.getValue());
+        }
+        yml.set("notified", new ArrayList<>(notifiedAchievements.getOrDefault(uuid, Collections.emptySet())));
+        yml.save(getPlayerFile(uuid, "yml"));
     }
 
     private void loadYamlData(@NotNull Player player) throws IOException {
-        // Implementation for YAML loading
+        UUID uuid = player.getUniqueId();
+        File file = getPlayerFile(uuid, "yml");
+        if (!file.exists()) return;
+        YamlConfiguration yml = YamlConfiguration.loadConfiguration(file);
+
+        ConfigurationSection progressSection = yml.getConfigurationSection("progress");
+        if (progressSection != null) {
+            Map<String, Integer> progress = new ConcurrentHashMap<>();
+            for (String key : progressSection.getKeys(false)) {
+                progress.put(key, progressSection.getInt(key));
+            }
+            playerProgress.put(uuid, progress);
+        }
+
+        ConfigurationSection completedSection = yml.getConfigurationSection("completed");
+        if (completedSection != null) {
+            Map<String, Long> completed = new ConcurrentHashMap<>();
+            for (String key : completedSection.getKeys(false)) {
+                completed.put(key, completedSection.getLong(key));
+            }
+            completedAchievements.put(uuid, completed);
+        }
+
+        List<String> notified = yml.getStringList("notified");
+        if (!notified.isEmpty()) {
+            Set<String> set = ConcurrentHashMap.newKeySet();
+            set.addAll(notified);
+            notifiedAchievements.put(uuid, set);
+        }
     }
 
-    private void loadSqliteData(@NotNull Player player) throws IOException {
-        // Implementation for SQLite loading
+    // ---------------------------------------------------------------------
+    // SQL persistence (uses the active remote database: MySQL / SQLite / H2)
+    // ---------------------------------------------------------------------
+
+    private void saveSqliteData() {
+        saveToDatabase(collectPlayerIds());
     }
 
-    private void loadMySqlData(@NotNull Player player) throws IOException {
-        // Implementation for MySQL loading
+    private void saveMySqlData() {
+        saveToDatabase(collectPlayerIds());
+    }
+
+    private void saveH2Data() {
+        saveToDatabase(collectPlayerIds());
+    }
+
+    private void saveSqliteData(@NotNull Player player) {
+        saveToDatabase(Collections.singleton(player.getUniqueId()));
+    }
+
+    private void saveMySqlData(@NotNull Player player) {
+        saveToDatabase(Collections.singleton(player.getUniqueId()));
+    }
+
+    private void saveH2Data(@NotNull Player player) {
+        saveToDatabase(Collections.singleton(player.getUniqueId()));
+    }
+
+    private void saveToDatabase(@NotNull Collection<UUID> uuids) {
+        IDatabase database = BedWars.getRemoteDatabase();
+        if (database == null) {
+            plugin.getLogger().warning("No remote database available to save achievement data.");
+            return;
+        }
+        for (UUID uuid : uuids) {
+            database.saveAchievementData(uuid, getProgressJson(uuid), getCompletedJson(uuid), getNotifiedJson(uuid));
+        }
+    }
+
+    private void loadSqliteData(@NotNull Player player) {
+        loadFromDatabase(player.getUniqueId());
+    }
+
+    private void loadMySqlData(@NotNull Player player) {
+        loadFromDatabase(player.getUniqueId());
+    }
+
+    private void loadH2Data(@NotNull Player player) {
+        loadFromDatabase(player.getUniqueId());
+    }
+
+    private void loadFromDatabase(UUID uuid) {
+        IDatabase database = BedWars.getRemoteDatabase();
+        if (database == null) return;
+        String[] data = database.fetchAchievementData(uuid);
+        if (data == null) return;
+        applyProgress(uuid, data.length > 0 ? data[0] : null);
+        applyCompleted(uuid, data.length > 1 ? data[1] : null);
+        applyNotified(uuid, data.length > 2 ? data[2] : null);
     }
 
     // Achievement implementation class
@@ -352,7 +651,7 @@ public class AchievementManager implements IAchievementManager {
         private final AchievementManager manager;
 
         public AchievementImpl(String id, String name, String description, AchievementCategory category,
-                            int requiredAmount, AchievementReward reward, AchievementManager manager) {
+                               int requiredAmount, AchievementReward reward, AchievementManager manager) {
             this.id = id;
             this.name = name;
             this.description = description;

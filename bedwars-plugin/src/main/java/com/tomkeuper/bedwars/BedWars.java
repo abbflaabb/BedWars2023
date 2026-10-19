@@ -497,8 +497,9 @@ public class BedWars extends JavaPlugin {
         } else if (config.getString(ConfigPath.GENERAL_CONFIGURATION_DATABASE_TYPE).equalsIgnoreCase("h2")) {
             remoteDatabase = new H2();
             remoteDatabase.init();
-            RecentlyPlayedTracker.init();
         }
+        // Recent arenas use a local H2 cache even when the main database is SQLite/MySQL.
+        RecentlyPlayedTracker.init();
 
         /* Citizens support */
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -690,7 +691,7 @@ public class BedWars extends JavaPlugin {
         if (config.getBoolean(ConfigPath.GENERAL_CONFIGURATION_ENABLE_HALLOWEEN)) HalloweenSpecial.init();
 
         // Resource Chest
-        if (config.getBoolean(ConfigPath.GENERAL_CONFIGURATION_RESOURCE_CHEST_ENABLED)) ResourceChestFeature.init();
+        ResourceChestFeature.init();
 
         // Register features
         SpoilPlayerTNTFeature.init();

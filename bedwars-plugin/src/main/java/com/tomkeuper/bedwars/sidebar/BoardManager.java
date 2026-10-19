@@ -70,11 +70,15 @@ public class BoardManager implements IScoreboardService {
 
     public final Map<UUID, TabPlayer> tabPlayerCache = new ConcurrentHashMap<>();
 
-    public TabPlayer getTabPlayer(@NotNull Player player) {
-        return tabPlayerCache.computeIfAbsent(
-                player.getUniqueId(),
-                uuid -> TabAPI.getInstance().getPlayer(uuid)
-        );
+    public @Nullable TabPlayer getTabPlayer(@NotNull Player player) {
+        // TAB replaces its player objects on reconnect and reload.
+        TabPlayer current = TabAPI.getInstance().getPlayer(player.getUniqueId());
+        if (current == null) {
+            tabPlayerCache.remove(player.getUniqueId());
+        } else {
+            tabPlayerCache.put(player.getUniqueId(), current);
+        }
+        return current;
     }
 
     public static boolean init() {
@@ -87,15 +91,24 @@ public class BoardManager implements IScoreboardService {
             Bukkit.getPluginManager().registerEvents(new BoardListener(), BedWars.plugin);
             // Also watch TAB enable events to refresh references after its reload
 
-            Objects.requireNonNull(TabAPI.getInstance().getEventBus()).register(TabLoadEvent.class, event -> {
+            Objects.requireNonNull(TabAPI.getInstance().getEventBus()).register(TabLoadEvent.class, event -> Bukkit.getScheduler().runTask(BedWars.plugin, () -> {
                 BoardManager.refreshTabManagers();
+                instance.tabPlayerCache.clear();
+                instance.tabPlayersPrefix.clear();
+                instance.tabPlayersSuffix.clear();
+                instance.headPlayersPrefix.clear();
+                instance.headPlayersSuffix.clear();
+                instance.tabPlayersTitle.clear();
                 BedWars.plugin.getLogger().info("[BoardManager] TAB plugin enabled; refreshed TAB managers.");
                 instance.registerPlaceholders();
                 instance.registerLobbyScoreboards();
                 for (IArena arena : Arena.getArenas()) {
                     arena.registerScoreboards();
                 }
-            });
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    instance.giveTabFeatures(player, Arena.getArenaByPlayer(player), false);
+                }
+            }));
         }
         return instance != null;
     }
@@ -115,12 +128,12 @@ public class BoardManager implements IScoreboardService {
 
     public void registerLoadEvent() {
         Objects.requireNonNull(TabAPI.getInstance().getEventBus()).register(PlayerLoadEvent.class, event -> {
-            if (BedWars.getServerType() == ServerType.SHARED && !((Player) event.getPlayer().getPlayer()).getWorld().getName().equalsIgnoreCase(BedWars.getLobbyWorld())) {
-                return;
-            }
+            Player player = (Player) event.getPlayer().getPlayer();
             Bukkit.getScheduler().runTaskLater(BedWars.plugin, () -> {
-                IArena arena = Arena.getArenaByPlayer((Player) event.getPlayer().getPlayer());
-                BoardManager.getInstance().giveTabFeatures((Player) event.getPlayer().getPlayer(), arena, false);
+                if (!player.isOnline()) return;
+                BoardManager.refreshTabManagers();
+                IArena arena = Arena.getArenaByPlayer(player);
+                BoardManager.getInstance().giveTabFeatures(player, arena, false);
             }, 5); // Give time for player to be put in arena player list.
         });
     }
@@ -349,8 +362,13 @@ public class BoardManager implements IScoreboardService {
         }
     }
     @Override
-    public void giveTabFeatures(@NotNull Player player, @Nullable IArena arena, boolean delay) {
+    public void giveTabFeatures(@NotNull Player player, @Nullable IArena requestedArena, boolean delay) {
         Bukkit.getScheduler().runTaskLater(BedWars.plugin, () -> {
+            if (!player.isOnline()) return;
+            // The player may have switched arenas while this update was queued.
+            IArena arena = Arena.getArenaByPlayer(player);
+            if (arena == null && BedWars.getServerType() == ServerType.SHARED
+                    && !player.getWorld().getName().equalsIgnoreCase(BedWars.getLobbyWorld())) return;
             String arenaDisplayname = (arena != null) ? arena.getDisplayName() : "null";
             BedWars.debug("giveTabFeatures() player: " + player.getDisplayName() + " arena: " + arenaDisplayname);
 
@@ -362,12 +380,8 @@ public class BoardManager implements IScoreboardService {
 
             TabPlayer tabPlayer = getTabPlayer(player);
 
-            if (nameTagManager == null) {
-                BedWars.plugin.getLogger().severe("An error occurred while giving Tab Features to player, TAB nameTagManager is null!");
-                return;
-            }
-            if (tabPlayer == null){
-                BedWars.plugin.getLogger().severe("An error occurred while giving Tab Features to player, TAB tabPlayer is null!");
+            // PlayerLoadEvent retries after TAB finishes loading this player.
+            if (tabPlayer == null || !tabPlayer.isLoaded() || scoreboardManager == null) {
                 return;
             }
 
@@ -403,20 +417,24 @@ public class BoardManager implements IScoreboardService {
 
             if (scoreboardName != null) {
                 Scoreboard scoreboard = scoreboardManager.getRegisteredScoreboards().get(scoreboardName);
-                scoreboardManager.showScoreboard(tabPlayer, scoreboard);
+                if (scoreboard != null) scoreboardManager.showScoreboard(tabPlayer, scoreboard);
             }
 
             setHeaderFooter(tabPlayer, arena);
 
-            if (BedWars.config.getBoolean(ConfigPath.SB_CONFIG_SIDEBAR_NAME_FORMATTING_ENABLED)){
+            if (tabListFormatManager != null && BedWars.config.getBoolean(ConfigPath.SB_CONFIG_SIDEBAR_NAME_FORMATTING_ENABLED)){
                 tabListFormatManager.setPrefix(tabPlayer, "%bw_prefix_tab%");
                 tabListFormatManager.setSuffix(tabPlayer, "%bw_suffix_tab%");
             }
 
-            nameTagManager.setPrefix(tabPlayer, "%bw_prefix_head%");
-            nameTagManager.setSuffix(tabPlayer, "%bw_suffix_head%");
+            if (nameTagManager != null) {
+                nameTagManager.setPrefix(tabPlayer, "%bw_prefix_head%");
+                nameTagManager.setSuffix(tabPlayer, "%bw_suffix_head%");
+            }
 
-            tabListFormatManager.setName(tabPlayer,BedWars.config.getString(ConfigPath.SB_CONFIG_SIDEBAR_PLAYER_NAME));
+            if (tabListFormatManager != null) {
+                tabListFormatManager.setName(tabPlayer,BedWars.config.getString(ConfigPath.SB_CONFIG_SIDEBAR_PLAYER_NAME));
+            }
 
         }, delay ? 5 : 0);
     }
@@ -479,12 +497,15 @@ public class BoardManager implements IScoreboardService {
 
     @Override
     public void remove(@NotNull Player player) {
-        if (Objects.requireNonNull(getTabPlayer(player)).isLoaded())
-            scoreboardManager.resetScoreboard(Objects.requireNonNull(getTabPlayer(player)));
+        TabPlayer tabPlayer = getTabPlayer(player);
+        if (tabPlayer != null && tabPlayer.isLoaded() && scoreboardManager != null) {
+            scoreboardManager.resetScoreboard(tabPlayer);
+        }
     }
 
     public void cleanupPlayer(@NotNull Player player) {
-        TabPlayer tabPlayer = getTabPlayer(player);
+        TabPlayer tabPlayer = tabPlayerCache.remove(player.getUniqueId());
+        if (tabPlayer == null) tabPlayer = TabAPI.getInstance().getPlayer(player.getUniqueId());
         if (tabPlayer == null) return;
 
         // Reset all prefixes and suffixes
@@ -495,7 +516,7 @@ public class BoardManager implements IScoreboardService {
         tabPlayersTitle.remove(tabPlayer);
 
         // Reset scoreboard
-        scoreboardManager.resetScoreboard(tabPlayer);
+        if (scoreboardManager != null && tabPlayer.isLoaded()) scoreboardManager.resetScoreboard(tabPlayer);
     }
 
     public String getPrefixTab(TabPlayer tabPlayer) {
@@ -840,6 +861,8 @@ public class BoardManager implements IScoreboardService {
 
     @Override
     public @Nullable Scoreboard getScoreboard(@NotNull Player player) {
-        return scoreboardManager.getActiveScoreboard(Objects.requireNonNull(getTabPlayer(player)));
+        TabPlayer tabPlayer = getTabPlayer(player);
+        return tabPlayer == null || !tabPlayer.isLoaded() || scoreboardManager == null
+                ? null : scoreboardManager.getActiveScoreboard(tabPlayer);
     }
 }

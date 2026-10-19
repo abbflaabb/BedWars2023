@@ -29,6 +29,7 @@ import com.tomkeuper.bedwars.api.events.player.PlayerJoinArenaEvent;
 import com.tomkeuper.bedwars.api.events.player.PlayerKillEvent;
 import com.tomkeuper.bedwars.api.events.player.PlayerLeaveArenaEvent;
 import com.tomkeuper.bedwars.api.events.gameplay.GameEndEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -46,7 +47,7 @@ public class AchievementListener implements Listener {
     private final IAchievementManager achievementManager;
 
     public AchievementListener() {
-        this.plugin = BedWars.getInstance();
+        this.plugin = BedWars.plugin;
         this.achievementManager = BedWars.getAchievementManager();
     }
 
@@ -64,22 +65,25 @@ public class AchievementListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        
+
         // Save achievement data for player
-        achievementManager.saveAllAchievementData();
+        achievementManager.saveAchievementData(player);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerArenaJoin(PlayerJoinArenaEvent event) {
+        // Spectators are not playing a game, so they must not count towards games played
+        if (event.isSpectator()) return;
+
         Player player = event.getPlayer();
         IArena arena = event.getArena();
-        
+
         // Increment games played counter
         incrementAchievementProgress(player, "games_played");
-        
+
         // Check for first game achievement
         checkFirstGameAchievement(player);
-        
+
         // Check for games played achievements
         checkGamesPlayedAchievements(player);
     }
@@ -87,30 +91,33 @@ public class AchievementListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerArenaLeave(PlayerLeaveArenaEvent event) {
         Player player = event.getPlayer();
-        IArena arena = event.getArena();
-        
+
         // Save achievement data for player
-        achievementManager.saveAllAchievementData();
+        achievementManager.saveAchievementData(player);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onGameEnd(GameEndEvent event) {
         List<UUID> winners = event.getWinners();
         IArena arena = event.getArena();
-        
+
         // Increment wins counter for all winners
         for (UUID winnerUUID : winners) {
             Player winner = arena.getPlayer(winnerUUID);
-            if (winner != null) {
-                // Increment wins counter
-                incrementAchievementProgress(winner, "wins");
-                
-                // Check for win achievements
-                checkWinAchievements(winner);
-                
-                // Check for perfect game achievement
-                checkPerfectGameAchievement(winner);
+            if (winner == null) {
+                // The player may already have been removed from the arena when the game ends
+                winner = Bukkit.getPlayer(winnerUUID);
             }
+            if (winner == null) continue;
+
+            // Increment wins counter
+            incrementAchievementProgress(winner, "wins");
+
+            // Check for win achievements
+            checkWinAchievements(winner);
+
+            // Check for perfect game achievement
+            checkPerfectGameAchievement(winner);
         }
     }
 
@@ -131,7 +138,7 @@ public class AchievementListener implements Listener {
             checkKillAchievements(killer);
             
             // Check if it's a final kill
-            if (event.getCause().isFinalKill()) {
+            if (event.getCause() != null && event.getCause().isFinalKill()) {
                 // Increment final kill counter for killer
                 incrementAchievementProgress(killer, "final_kills");
                 
@@ -158,106 +165,76 @@ public class AchievementListener implements Listener {
 
     // Helper methods for achievement checking
     private void checkFirstGameAchievement(Player player) {
-        if (getAchievementProgress(player, "games_played") == 1) {
-            completeAchievementIfEligible(player, "first_game");
-        }
+        completeAchievementIfEligible(player, "first_game", getAchievementProgress(player, "games_played"));
     }
 
     private void checkFirstKillAchievement(Player player) {
-        if (getAchievementProgress(player, "kills") == 1) {
-            completeAchievementIfEligible(player, "first_kill");
-        }
+        completeAchievementIfEligible(player, "first_kill", getAchievementProgress(player, "kills"));
     }
 
     private void checkGamesPlayedAchievements(Player player) {
         int gamesPlayed = getAchievementProgress(player, "games_played");
-        
-        if (gamesPlayed >= 10) {
-            completeAchievementIfEligible(player, "games_played_10");
-        }
-        
-        if (gamesPlayed >= 50) {
-            completeAchievementIfEligible(player, "games_played_50");
-        }
-        
-        if (gamesPlayed >= 100) {
-            completeAchievementIfEligible(player, "games_played_100");
-        }
+
+        completeAchievementIfEligible(player, "games_played_10", gamesPlayed);
+        completeAchievementIfEligible(player, "games_played_50", gamesPlayed);
+        completeAchievementIfEligible(player, "games_played_100", gamesPlayed);
     }
 
     private void checkKillAchievements(Player player) {
         int kills = getAchievementProgress(player, "kills");
-        
-        if (kills >= 10) {
-            completeAchievementIfEligible(player, "kills_10");
-        }
-        
-        if (kills >= 50) {
-            completeAchievementIfEligible(player, "kills_50");
-        }
+
+        completeAchievementIfEligible(player, "kills_10", kills);
+        completeAchievementIfEligible(player, "kills_50", kills);
     }
 
     private void checkFinalKillAchievements(Player player) {
         int finalKills = getAchievementProgress(player, "final_kills");
-        
-        if (finalKills >= 5) {
-            completeAchievementIfEligible(player, "final_kills_5");
-        }
-        
-        if (finalKills >= 20) {
-            completeAchievementIfEligible(player, "final_kills_20");
-        }
+
+        completeAchievementIfEligible(player, "final_kills_5", finalKills);
+        completeAchievementIfEligible(player, "final_kills_20", finalKills);
     }
 
     private void checkBedBreakAchievements(Player player) {
         int bedsBroken = getAchievementProgress(player, "beds_broken");
-        
-        if (bedsBroken >= 1) {
-            completeAchievementIfEligible(player, "first_bed_break");
-        }
-        
-        if (bedsBroken >= 10) {
-            completeAchievementIfEligible(player, "beds_broken_10");
-        }
-        
-        if (bedsBroken >= 50) {
-            completeAchievementIfEligible(player, "beds_broken_50");
-        }
+
+        completeAchievementIfEligible(player, "first_bed_break", bedsBroken);
+        completeAchievementIfEligible(player, "beds_broken_10", bedsBroken);
+        completeAchievementIfEligible(player, "beds_broken_50", bedsBroken);
     }
 
     private void checkWinAchievements(Player player) {
         int wins = getAchievementProgress(player, "wins");
-        
-        if (wins >= 1) {
-            completeAchievementIfEligible(player, "first_win");
-        }
-        
-        if (wins >= 5) {
-            completeAchievementIfEligible(player, "wins_5");
-        }
-        
-        if (wins >= 20) {
-            completeAchievementIfEligible(player, "wins_20");
-        }
-        
-        if (wins >= 50) {
-            completeAchievementIfEligible(player, "wins_50");
-        }
+
+        completeAchievementIfEligible(player, "first_win", wins);
+        completeAchievementIfEligible(player, "wins_5", wins);
+        completeAchievementIfEligible(player, "wins_20", wins);
+        completeAchievementIfEligible(player, "wins_50", wins);
     }
 
     private void checkPerfectGameAchievement(Player player) {
-        if (getAchievementProgress(player, "deaths") == 0) {
-            completeAchievementIfEligible(player, "perfect_game");
-        }
+        int deaths = getAchievementProgress(player, "deaths");
+        // A perfect game is a win without dying. The achievement requires a single occurrence.
+        completeAchievementIfEligible(player, "perfect_game", deaths == 0 ? 1 : 0);
     }
 
-    private void completeAchievementIfEligible(Player player, String achievementId) {
+    /**
+     * Sync the tracked stat {@code progress} onto the given achievement and complete it when
+     * the progress reaches the achievement's required amount.
+     *
+     * @param player        the player
+     * @param achievementId the achievement id
+     * @param progress      the current value of the stat backing the achievement
+     */
+    private void completeAchievementIfEligible(Player player, String achievementId, int progress) {
         IAchievement achievement = achievementManager.getAchievement(achievementId);
-        if (achievement != null && !achievementManager.isAchievementCompleted(player, achievementId)) {
-            int progress = achievementManager.getAchievementProgress(player, achievementId);
-            if (progress >= achievement.getRequiredAmount()) {
-                achievementManager.completeAchievement(player, achievementId);
-            }
+        if (achievement == null) return;
+
+        // Keep the achievement's own progress in sync with the tracked stat so the GUI shows correct values
+        achievementManager.setAchievementProgress(player, achievementId, progress);
+
+        if (!achievementManager.isAchievementCompleted(player, achievementId)
+                && progress >= achievement.getRequiredAmount()) {
+            achievementManager.completeAchievement(player, achievementId);
         }
     }
 

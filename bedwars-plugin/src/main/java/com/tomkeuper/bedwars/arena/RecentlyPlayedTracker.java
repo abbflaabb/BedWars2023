@@ -22,6 +22,7 @@ package com.tomkeuper.bedwars.arena;
 
 import com.tomkeuper.bedwars.BedWars;
 
+import java.io.File;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,7 +46,7 @@ public class RecentlyPlayedTracker {
     // ── Database init ─────────────────────────────────────────────────────────
 
     /**
-     * Call once on plugin enable (after H2 is ready) to create the table
+     * Call once on plugin enable for every primary database type to create the table
      * and load non-expired rows into the in-memory cache.
      */
     public static void init() {
@@ -222,12 +223,22 @@ public class RecentlyPlayedTracker {
     // ── Internal helper ───────────────────────────────────────────────────────
 
     /**
-     * Borrows a connection from the same H2 file used by the plugin.
+     * Opens the tracker cache independently of the primary database type.
+     * The caller owns the returned connection and must close it.
      */
     private static Connection getConnection() throws SQLException {
-        String url = "jdbc:h2:" + BedWars.plugin.getDataFolder().getAbsolutePath()
-                + java.io.File.separator + "Cache"
-                + java.io.File.separator + "player_data.h2"
+        // SQLite/MySQL startup does not initialize the plugin's H2 backend.
+        // Explicit loading also registers the runtime-loaded H2 JDBC driver.
+        try {
+            Class.forName("org.h2.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("H2 driver is unavailable for the recently played cache", e);
+        }
+        File cacheDirectory = new File(BedWars.plugin.getDataFolder(), "Cache");
+        if (!cacheDirectory.isDirectory() && !cacheDirectory.mkdirs() && !cacheDirectory.isDirectory()) {
+            throw new SQLException("Could not create recently played cache directory: " + cacheDirectory);
+        }
+        String url = "jdbc:h2:" + new File(cacheDirectory, "player_data.h2").getAbsolutePath()
                 + ";TRACE_LEVEL_FILE=0";
         return DriverManager.getConnection(url);
     }

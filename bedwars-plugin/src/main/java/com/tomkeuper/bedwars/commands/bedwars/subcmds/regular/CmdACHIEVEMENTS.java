@@ -27,7 +27,6 @@ import com.tomkeuper.bedwars.api.achievements.AchievementCategory;
 import com.tomkeuper.bedwars.api.achievements.AchievementStats;
 import com.tomkeuper.bedwars.api.command.ParentCommand;
 import com.tomkeuper.bedwars.api.command.SubCommand;
-import com.tomkeuper.bedwars.api.configuration.ConfigPath;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -39,6 +38,7 @@ import com.tomkeuper.bedwars.utils.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.Arrays;
 import java.util.List;
@@ -93,13 +93,22 @@ public class CmdACHIEVEMENTS extends SubCommand implements Listener {
             return true;
         }
 
+    private static ItemStack makeGrayPane() {
+        try {
+            return new ItemBuilder(Material.valueOf("GRAY_STAINED_GLASS_PANE")).setName(" ").build();
+        } catch (IllegalArgumentException e) {
+            // 1.8: STAINED_GLASS_PANE + data 7 = gray
+            return new ItemBuilder(Material.valueOf("STAINED_GLASS_PANE")).setName(" ").setDurability((short) 7).build();
+        }
+    }
+
     private void showAchievementGUI(Player player, IAchievementManager manager) {
         Inventory gui = new AchievementMenu(9, "Achievements").getInventory();
         
         // Create glass border
         for (int i = 0; i < 9; i++) {
             if (i == 4) continue; // Skip center slot
-            gui.setItem(i, new ItemBuilder(Material.STAINED_GLASS_PANE).setName(" ").setDurability((short) 7).build());
+            gui.setItem(i, makeGrayPane());
         }
         
         // Center slot - main achievements button
@@ -122,10 +131,10 @@ public class CmdACHIEVEMENTS extends SubCommand implements Listener {
         
         // Create glass border
         for (int i = 0; i < 9; i++) {
-            gui.setItem(i, new ItemBuilder(Material.STAINED_GLASS_PANE).setName(" ").setDurability((short) 7).build());
+            gui.setItem(i, makeGrayPane());
         }
         for (int i = 45; i < 54; i++) {
-            gui.setItem(i, new ItemBuilder(Material.STAINED_GLASS_PANE).setName(" ").setDurability((short) 7).build());
+            gui.setItem(i, makeGrayPane());
         }
         
         // Title
@@ -175,7 +184,7 @@ public class CmdACHIEVEMENTS extends SubCommand implements Listener {
         
         // Create glass border
         for (int i = 0; i < 9; i++) {
-            gui.setItem(i, new ItemBuilder(Material.STAINED_GLASS_PANE).setName(" ").setDurability((short) 7).build());
+            gui.setItem(i, makeGrayPane());
         }
         
         // Stats
@@ -219,10 +228,10 @@ public class CmdACHIEVEMENTS extends SubCommand implements Listener {
         
         // Create glass border
         for (int i = 0; i < 9; i++) {
-            gui.setItem(i, new ItemBuilder(Material.STAINED_GLASS_PANE).setName(" ").setDurability((short) 7).build());
+            gui.setItem(i, makeGrayPane());
         }
         for (int i = 45; i < 54; i++) {
-            gui.setItem(i, new ItemBuilder(Material.STAINED_GLASS_PANE).setName(" ").setDurability((short) 7).build());
+            gui.setItem(i, makeGrayPane());
         }
         
         // Title
@@ -312,7 +321,7 @@ public class CmdACHIEVEMENTS extends SubCommand implements Listener {
                 showAchievementGUI(player, manager);
             } else if (menu.getSize() == 9 && slot == 4) {
                 showAchievementListGUI(player, manager);
-            } else if (menu.getName().equals("Achievement List") && slot >= 10 && slot < 45) {
+            } else if (menu.getTitle().equals("Achievement List") && slot >= 10 && slot < 45) {
                 showAchievementProgressGUI(player, manager);
             }
         });

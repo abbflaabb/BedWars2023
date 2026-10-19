@@ -13,16 +13,16 @@ categories:
     color: "RED"
     icon: "DIAMOND_SWORD"
     description: "Combat-related achievements"
-  BEDS:
-    display_name: "&eBeds"
+  BED:
+    display_name: "&eBed"
     color: "YELLOW"
     icon: "BED"
     description: "Bed-related achievements"
-  WINS:
-    display_name: "&aWins"
+  VICTORY:
+    display_name: "&aVictory"
     color: "GREEN"
     icon: "GOLDEN_CHEST"
-    description: "Win-related achievements"
+    description: "Victory achievements"
   GAMES:
     display_name: "&bGames"
     color: "BLUE"
@@ -148,7 +148,7 @@ achievements:
     
   # Bed Achievements
   first_bed_break:
-    category: "BEDS"
+    category: "BED"
     name: "&eBed Breaker"
     description: "&7Break your first bed"
     required_amount: 1
@@ -160,7 +160,7 @@ achievements:
     particles: "VILLAGER_HAPPY"
     
   beds_broken_10:
-    category: "BEDS"
+    category: "BED"
     name: "&eBed Destroyer"
     description: "&7Break 10 beds"
     required_amount: 10
@@ -172,7 +172,7 @@ achievements:
     particles: "VILLAGER_HAPPY"
     
   beds_broken_50:
-    category: "BEDS"
+    category: "BED"
     name: "&eBed Annihilator"
     description: "&7Break 50 beds"
     required_amount: 50
@@ -183,9 +183,9 @@ achievements:
     sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
     particles: "VILLAGER_HAPPY"
     
-  # Win Achievements
+  # Victory Achievements
   first_win:
-    category: "WINS"
+    category: "VICTORY"
     name: "&aFirst Victory"
     description: "&7Win your first game"
     required_amount: 1
@@ -197,7 +197,7 @@ achievements:
     particles: "VILLAGER_HAPPY"
     
   wins_5:
-    category: "WINS"
+    category: "VICTORY"
     name: "&aWinner"
     description: "&7Win 5 games"
     required_amount: 5
@@ -209,7 +209,7 @@ achievements:
     particles: "VILLAGER_HAPPY"
     
   wins_20:
-    category: "WINS"
+    category: "VICTORY"
     name: "&aChampion"
     description: "&7Win 20 games"
     required_amount: 20
@@ -221,7 +221,7 @@ achievements:
     particles: "VILLAGER_HAPPY"
     
   wins_50:
-    category: "WINS"
+    category: "VICTORY"
     name: "&aBedWars Legend"
     description: "&7Win 50 games"
     required_amount: 50
@@ -270,7 +270,7 @@ settings:
   # Achievement data save interval (in minutes)
   save_interval: 5
   
-  # Achievement data save format (JSON, YAML, MYSQL, SQLITE)
+  # Achievement data save format (JSON, YAML, MYSQL, SQLITE, H2)
   save_format: "JSON"
   
   # Achievement data save location

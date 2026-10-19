@@ -44,7 +44,12 @@ public enum AchievementCategory {
      * Victory achievements (wins, win streaks, etc.)
      */
     VICTORY("Victory"),
-    
+
+    /**
+     * Game-related achievements (games played, etc.)
+     */
+    GAMES("Games"),
+
     /**
      * Special achievements (rare achievements, milestones, etc.)
      */

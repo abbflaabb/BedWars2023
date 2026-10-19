@@ -132,6 +132,82 @@ public interface IAchievementManager {
     @NotNull Map<UUID, Map<String, Integer>> getAllAchievementProgress();
 
     /**
+     * Save achievement data for a single player.
+     *
+     * @param player The player to save data for
+     */
+    void saveAchievementData(@NotNull Player player);
+
+    /**
+     * Check if the achievement system is enabled.
+     *
+     * @return true if enabled, false otherwise
+     */
+    boolean isEnabled();
+
+    /**
+     * Check if achievement notifications are enabled.
+     *
+     * @return true if enabled, false otherwise
+     */
+    boolean isNotificationsEnabled();
+
+    /**
+     * Check if achievement sounds are enabled.
+     *
+     * @return true if enabled, false otherwise
+     */
+    boolean isSoundsEnabled();
+
+    /**
+     * Check if achievement particles are enabled.
+     *
+     * @return true if enabled, false otherwise
+     */
+    boolean isParticlesEnabled();
+
+    /**
+     * Check if achievement commands are enabled.
+     *
+     * @return true if enabled, false otherwise
+     */
+    boolean isCommandsEnabled();
+
+    /**
+     * Check if achievement statistics are enabled.
+     *
+     * @return true if enabled, false otherwise
+     */
+    boolean isStatisticsEnabled();
+
+    /**
+     * Get the interval (in minutes) at which achievement data is saved.
+     *
+     * @return The save interval
+     */
+    int getSaveInterval();
+
+    /**
+     * Get the format used to save achievement data.
+     *
+     * @return The save format
+     */
+    @NotNull String getSaveFormat();
+
+    /**
+     * Get the location where achievement data is saved.
+     *
+     * @return The save location
+     */
+    @NotNull String getSaveLocation();
+
+    /**
+     * Initialize the achievement system.
+     * This method should be called after loading achievements from config.
+     */
+    void initializeAchievements();
+
+    /**
      * Save achievement data for all players.
      */
     void saveAllAchievementData();

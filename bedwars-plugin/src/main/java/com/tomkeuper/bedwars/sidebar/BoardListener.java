@@ -66,6 +66,6 @@ public class BoardListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event){
-        BoardManager.getInstance().tabPlayerCache.remove(event.getPlayer().getUniqueId());
+        BoardManager.getInstance().cleanupPlayer(event.getPlayer());
     }
 }

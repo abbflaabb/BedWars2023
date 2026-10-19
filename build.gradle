@@ -1,7 +1,9 @@
+version = providers.gradleProperty('pluginVersion').get()
+
 allprojects {
     group = 'com.tomkeuper.bedwars'
     version = rootProject.version
-    description = 'BedWars minigame by Tom Keuper forked from BedWars1058'
+    description = 'BedWars2023: team-based Minecraft minigames with achievements, resource chests, and multi-arena support.'
 
     ext {
         id = 'bedwars'

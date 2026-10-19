@@ -35,15 +35,18 @@ public class BasicAchievement implements IAchievement {
     private final AchievementCategory category;
     private final int requiredAmount;
     private final AchievementReward reward;
+    private final AchievementManager manager;
 
     public BasicAchievement(@NotNull String id, @NotNull String name, @NotNull String description,
-                           @NotNull AchievementCategory category, int requiredAmount, @NotNull AchievementReward reward) {
+                           @NotNull AchievementCategory category, int requiredAmount, @NotNull AchievementReward reward,
+                           @NotNull AchievementManager manager) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.category = category;
         this.requiredAmount = requiredAmount;
         this.reward = reward;
+        this.manager = manager;
     }
 
     @Override
@@ -78,30 +81,22 @@ public class BasicAchievement implements IAchievement {
 
     @Override
     public boolean isCompleted(@NotNull Player player) {
-        // This would be implemented to check database
-        // For now, return false
-        return false;
+        return manager.isAchievementCompleted(player, id);
     }
 
     @Override
     public void complete(@NotNull Player player) {
-        // This would be implemented to mark as completed in database
-        // For now, just log
-        System.out.println("Achievement " + id + " completed by " + player.getName());
+        manager.completeAchievement(player, id);
     }
 
     @Override
     public int getProgress(@NotNull Player player) {
-        // This would be implemented to get progress from database
-        // For now, return 0
-        return 0;
+        return manager.getAchievementProgress(player, id);
     }
 
     @Override
     public void setProgress(@NotNull Player player, int progress) {
-        // This would be implemented to save progress to database
-        // For now, just log
-        System.out.println("Achievement " + id + " progress set to " + progress + " for " + player.getName());
+        manager.setAchievementProgress(player, id, progress);
     }
 
     @Override

@@ -86,6 +86,11 @@ public class H2 implements IDatabase {
                         "iso VARCHAR(200));";
                 st.executeUpdate(sql);
             }
+            try (Statement st = connection.createStatement()) {
+                sql = "CREATE TABLE IF NOT EXISTS ACHIEVEMENTS (UUID VARCHAR(36) PRIMARY KEY, " +
+                        "PROGRESS_DATA CLOB, COMPLETED_DATA CLOB, NOTIFIED_DATA CLOB);";
+                st.executeUpdate(sql);
+            }
         }catch (SQLException e) {
             e.printStackTrace();
         }
@@ -560,6 +565,60 @@ public class H2 implements IDatabase {
             e.printStackTrace();
         }
         return results;
+    }
+
+    @Override
+    public void saveAchievementData(UUID uuid, String progressData, String completedData, String notifiedData) {
+        try {
+            checkConnection();
+            if (hasAchievementData(uuid)) {
+                try (PreparedStatement ps = connection.prepareStatement("UPDATE ACHIEVEMENTS SET PROGRESS_DATA=?, COMPLETED_DATA=?, NOTIFIED_DATA=? WHERE UUID = ?;")) {
+                    ps.setString(1, progressData);
+                    ps.setString(2, completedData);
+                    ps.setString(3, notifiedData);
+                    ps.setString(4, uuid.toString());
+                    ps.executeUpdate();
+                }
+            } else {
+                try (PreparedStatement ps = connection.prepareStatement("INSERT INTO ACHIEVEMENTS (UUID, PROGRESS_DATA, COMPLETED_DATA, NOTIFIED_DATA) VALUES (?, ?, ?, ?);")) {
+                    ps.setString(1, uuid.toString());
+                    ps.setString(2, progressData);
+                    ps.setString(3, completedData);
+                    ps.setString(4, notifiedData);
+                    ps.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean hasAchievementData(UUID uuid) throws SQLException {
+        checkConnection();
+        try (PreparedStatement ps = connection.prepareStatement("SELECT UUID FROM ACHIEVEMENTS WHERE UUID = ?;")) {
+            ps.setString(1, uuid.toString());
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    @Override
+    public String[] fetchAchievementData(UUID uuid) {
+        try {
+            checkConnection();
+            try (PreparedStatement ps = connection.prepareStatement("SELECT PROGRESS_DATA, COMPLETED_DATA, NOTIFIED_DATA FROM ACHIEVEMENTS WHERE UUID = ?;")) {
+                ps.setString(1, uuid.toString());
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return new String[]{rs.getString(1), rs.getString(2), rs.getString(3)};
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private void checkConnection() throws SQLException {

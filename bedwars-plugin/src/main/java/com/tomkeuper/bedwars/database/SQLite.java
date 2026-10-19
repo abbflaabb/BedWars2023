@@ -103,6 +103,11 @@ public class SQLite implements IDatabase {
                         "iso VARCHAR(200));";
                 st.executeUpdate(sql);
             }
+            try (Statement st = connection.createStatement()) {
+                sql = "CREATE TABLE IF NOT EXISTS achievements (uuid VARCHAR(36) PRIMARY KEY, " +
+                        "progress_data TEXT, completed_data TEXT, notified_data TEXT);";
+                st.executeUpdate(sql);
+            }
         }catch (SQLException e) {
             e.printStackTrace();
         }
@@ -583,6 +588,60 @@ public class SQLite implements IDatabase {
             e.printStackTrace();
         }
         return results;
+    }
+
+    @Override
+    public void saveAchievementData(UUID uuid, String progressData, String completedData, String notifiedData) {
+        try {
+            checkConnection();
+            if (hasAchievementData(uuid)) {
+                try (PreparedStatement ps = connection.prepareStatement("UPDATE achievements SET progress_data=?, completed_data=?, notified_data=? WHERE uuid = ?;")) {
+                    ps.setString(1, progressData);
+                    ps.setString(2, completedData);
+                    ps.setString(3, notifiedData);
+                    ps.setString(4, uuid.toString());
+                    ps.executeUpdate();
+                }
+            } else {
+                try (PreparedStatement ps = connection.prepareStatement("INSERT INTO achievements (uuid, progress_data, completed_data, notified_data) VALUES (?, ?, ?, ?);")) {
+                    ps.setString(1, uuid.toString());
+                    ps.setString(2, progressData);
+                    ps.setString(3, completedData);
+                    ps.setString(4, notifiedData);
+                    ps.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean hasAchievementData(UUID uuid) throws SQLException {
+        checkConnection();
+        try (PreparedStatement ps = connection.prepareStatement("SELECT uuid FROM achievements WHERE uuid = ?;")) {
+            ps.setString(1, uuid.toString());
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    @Override
+    public String[] fetchAchievementData(UUID uuid) {
+        try {
+            checkConnection();
+            try (PreparedStatement ps = connection.prepareStatement("SELECT progress_data, completed_data, notified_data FROM achievements WHERE uuid = ?;")) {
+                ps.setString(1, uuid.toString());
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return new String[]{rs.getString(1), rs.getString(2), rs.getString(3)};
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private void checkConnection() throws SQLException {
